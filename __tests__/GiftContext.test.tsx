@@ -28,6 +28,7 @@ function TestConsumer() {
           setResult({
             portrait: 'Test portrait',
             recommendations: [],
+            gift_intention: 'test intention',
             confidence_overall: 'high',
             confidence_reason: 'test',
           })

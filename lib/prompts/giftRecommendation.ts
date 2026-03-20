@@ -24,11 +24,12 @@ OUTPUT SCHEMA:
       "price_range": "string — a specific rupee range within their budget",
       "occasion_fit": "strong | good | works",
       "confidence": "high | medium | low",
-      "search_keywords": "string — what someone would type to find this on Google/Amazon",
+      "search_keywords": "string — what someone would type to find this on Google/Amazon. If a city is provided, append the city name for local results (e.g. 'pottery class Mumbai').",
       "relevance_signal": "string — max 10 words naming the specific input that drove this recommendation"
     }
   ],
   "portrait": "string — Start with 'We think'. 1–2 sentences. Who is this person right now? What phase of life are they in? What does a gift need to do for them emotionally? Write warmly, as if describing someone you know well.",
+  "gift_intention": "string — 1 sentence. What emotional goal should this gift achieve? e.g. 'Make them feel seen during a stressful transition' or 'Celebrate their creative side'.",
   "confidence_overall": "high | medium | low",
   "confidence_reason": "string — short note on signal quality"
 }
@@ -91,7 +92,25 @@ PRICE RANGE RULES:
   - If multiple budget bands were selected: distribute recommendations across both price points.
   - Each price_range must be a specific range, not a single number — e.g. '₹2,000–3,500' not '₹2,500'.
   - For premium budget (above ₹15k): include at least 2 aspirational items the recipient would genuinely consider luxurious.
-  - Never suggest a product whose realistic Indian market price clearly exceeds the stated budget — this breaks user trust immediately and makes all other recommendations suspect.`;
+  - Never suggest a product whose realistic Indian market price clearly exceeds the stated budget — this breaks user trust immediately and makes all other recommendations suspect.
+
+OCCASION PROFILES:
+Match your recommendations to the occasion's emotional register:
+- Diwali / Eid / Christmas / Raksha Bandhan — festive tone; premium consumables, home décor, hampers, pooja items all appropriate; tradition-aligned.
+- Birthday — personal and fun; experiences, hobbies, indulgences work best; avoid generic.
+- Wedding / Anniversary — couple-friendly; premium, shareable, lasting; high social weight.
+- Housewarming — practical-premium; home appliances, décor, kitchenware; avoid anything too personal.
+- No occasion — maximum creative freedom; lean into personality and interests deeply.
+
+RELATIONSHIP DEPTH TIERS:
+Adjust personalisation depth and risk level per relationship:
+- Tier 1 (Maximum depth): Spouse/Partner, Close friend, Sibling — go deep, be bold, reference inside jokes or specific memories if signals exist.
+- Tier 2 (Thoughtful-safe): Parent, Child, In-law — thoughtful and warm, but avoid anything too risky or niche; quality-over-quirkiness.
+- Tier 3 (Safe-professional): Colleague, Distant relative, Other — universally appealing, premium but neutral; experiences over personal items.
+
+AESTHETIC AND HISTORY SIGNALS:
+- If aesthetic_signals are provided from chat analysis, use them to filter style — e.g. if the recipient's aesthetic is 'minimalist', avoid ornate or maximalist gifts.
+- If gift_history_hints are provided, avoid repeating past gift categories. Use them to identify gaps — if they've received kitchen items before, explore a different territory.`;
 
 // ─── User prompt builder ────────────────────────────────────
 
@@ -114,6 +133,7 @@ export function buildUserPrompt(data: GiftFormData): string {
     `- Responds well to: ${data.pastGiftResponse.join(', ') || 'Not mentioned'}`,
     `- Lifestyle: ${data.lifestyle || 'Not mentioned'}`,
     `- Life stage right now: ${data.lifeStage || 'Not mentioned'}`,
+    `- City (for local experiences): ${data.recipientCity || 'Not specified'}`,
   ];
 
   // Append chat signals if available (Phase 2)
@@ -128,6 +148,12 @@ export function buildUserPrompt(data: GiftFormData): string {
       `- Standout signal: ${cs.standout_signal || 'None'}`,
       `- Signal confidence: ${cs.confidence}`,
     );
+    if (cs.aesthetic_signals && cs.aesthetic_signals.length > 0) {
+      parts.push(`- Aesthetic signals: ${cs.aesthetic_signals.join(', ')}`);
+    }
+    if (cs.gift_history_hints && cs.gift_history_hints.length > 0) {
+      parts.push(`- Gift history hints: ${cs.gift_history_hints.join(', ')}`);
+    }
   }
 
   // Append Instagram signals if available (Phase 3)

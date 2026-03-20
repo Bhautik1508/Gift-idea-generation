@@ -8,6 +8,7 @@ const BASE_FORM: GiftFormData = {
   recipientGender: 'Woman',
   occasion: 'Birthday',
   budget: ['₹3k–7.5k'],
+  recipientCity: 'Mumbai',
   recentChanges: 'Got a new job at a startup',
   interests: 'Loves pottery and cooking',
   wishedFor: 'Always talks about wanting a nice knife set',

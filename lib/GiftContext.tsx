@@ -11,6 +11,7 @@ const DEFAULT_FORM_DATA: GiftFormData = {
   recipientGender: '',
   occasion: '',
   budget: [],
+  recipientCity: '',
   recentChanges: '',
   interests: '',
   wishedFor: '',

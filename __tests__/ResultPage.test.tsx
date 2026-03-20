@@ -11,6 +11,7 @@ jest.mock('next/navigation', () => ({
 
 const mockResult: GiftOutput = {
   portrait: 'We think they are a creative soul.',
+  gift_intention: 'Celebrate their creative side',
   recommendations: [
     {
       product_name: 'Pottery Class',

@@ -138,6 +138,17 @@ export default function StartPage() {
           )}
         </QuestionCard>
 
+        {/* Q6: City (Optional) */}
+        <QuestionCard label="Which city are they in? (Optional)" description="Helps us suggest local experiences and relevant search keywords.">
+          <input
+            type="text"
+            value={formData.recipientCity}
+            onChange={(e) => updateFormData({ recipientCity: e.target.value })}
+            placeholder="e.g. Mumbai, Bangalore, Delhi"
+            className="w-full h-14 px-4 rounded-xl border border-border bg-surface text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+          />
+        </QuestionCard>
+
         <div className="pt-6 border-t border-border">
           <button
             type="submit"

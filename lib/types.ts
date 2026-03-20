@@ -6,6 +6,7 @@ export interface GiftFormData {
   recipientGender: string;
   occasion: string;
   budget: string[];
+  recipientCity: string;
   recentChanges: string;
   interests: string;
   wishedFor: string;
@@ -54,6 +55,7 @@ export interface GiftRecommendation {
 export interface GiftOutput {
   recommendations: GiftRecommendation[];
   portrait: string;
+  gift_intention: string;
   confidence_overall: 'high' | 'medium' | 'low';
   confidence_reason: string;
 }
