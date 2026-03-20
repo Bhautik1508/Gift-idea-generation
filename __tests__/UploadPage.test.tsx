@@ -31,7 +31,7 @@ describe('UploadPage', () => {
         <UploadPage />
       </GiftProvider>
     );
-    expect(screen.getByText('Drop a WhatsApp export here')).toBeInTheDocument();
+    expect(screen.getByText(/drop a whatsapp export here/i)).toBeInTheDocument();
   });
 
   test('skip button navigates to thinking page', () => {

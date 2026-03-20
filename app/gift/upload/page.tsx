@@ -3,7 +3,29 @@
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGift } from '@/lib/GiftContext';
+import JSZip from 'jszip';
 import type { ChatSignals } from '@/lib/types';
+
+const ACCEPTED_EXTENSIONS = ['.txt', '.zip'];
+
+function isAcceptedFile(name: string): boolean {
+  return ACCEPTED_EXTENSIONS.some((ext) => name.toLowerCase().endsWith(ext));
+}
+
+async function extractTextFromFile(file: File): Promise<string> {
+  if (file.name.toLowerCase().endsWith('.zip')) {
+    const zip = await JSZip.loadAsync(file);
+    // Find the first .txt file inside the zip
+    const txtFile = Object.values(zip.files).find(
+      (f) => !f.dir && f.name.toLowerCase().endsWith('.txt')
+    );
+    if (!txtFile) {
+      throw new Error('No .txt file found inside the zip. Please export the chat without media.');
+    }
+    return txtFile.async('string');
+  }
+  return file.text();
+}
 
 export default function UploadPage() {
   const router = useRouter();
@@ -19,21 +41,21 @@ export default function UploadPage() {
   const handleFileDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const dropped = e.dataTransfer.files[0];
-    if (dropped && dropped.name.endsWith('.txt')) {
+    if (dropped && isAcceptedFile(dropped.name)) {
       setFile(dropped);
       setError('');
     } else {
-      setError('Please upload a .txt file (WhatsApp export)');
+      setError('Please upload a .txt or .zip file (WhatsApp export)');
     }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
-    if (selected && selected.name.endsWith('.txt')) {
+    if (selected && isAcceptedFile(selected.name)) {
       setFile(selected);
       setError('');
     } else if (selected) {
-      setError('Please upload a .txt file (WhatsApp export)');
+      setError('Please upload a .txt or .zip file (WhatsApp export)');
     }
   };
 
@@ -44,7 +66,7 @@ export default function UploadPage() {
     setError('');
 
     try {
-      const chatText = await file.text();
+      const chatText = await extractTextFromFile(file);
 
       const res = await fetch('/api/parse-chat', {
         method: 'POST',
@@ -115,7 +137,7 @@ export default function UploadPage() {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".txt"
+              accept=".txt,.zip"
               onChange={handleFileSelect}
               className="hidden"
               data-testid="file-input"
@@ -138,7 +160,7 @@ export default function UploadPage() {
                   </svg>
                 </div>
                 <p className="font-medium text-foreground">Drop a WhatsApp export here</p>
-                <p className="text-sm text-muted">or click to browse — .txt files only</p>
+                <p className="text-sm text-muted">or click to browse — .txt or .zip</p>
               </div>
             )}
           </div>
