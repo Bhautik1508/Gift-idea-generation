@@ -116,3 +116,13 @@ textarea {
 .animate-fade-swap {
   animation: fadeSwap 2.5s ease-in-out;
 }
+
+/* Bouncing dots for extract phase */
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}

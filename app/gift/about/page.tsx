@@ -37,9 +37,11 @@ export default function AboutPage() {
 
   const isComplete =
     formData.personality.length > 0 &&
-    formData.pastGiftResponse.length > 0 &&
-    !!formData.lifestyle &&
-    !!formData.lifeStage;
+    formData.pastGiftResponse.length > 0;
+
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

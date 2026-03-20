@@ -18,6 +18,10 @@ export default function ThinkingPage() {
   const [error, setError] = useState<string | null>(null);
   const fetchedRef = useRef(false);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   // Cycle loading messages
   useEffect(() => {
     const interval = setInterval(() => {
@@ -57,13 +61,9 @@ export default function ThinkingPage() {
 
         const data = await response.json();
         
-        // Brief artificial delay for aesthetics so the animation is appreciated 
-        // even if API is super fast
-        setTimeout(() => {
-          setResult(data);
-          setIsLoading(false);
-          router.push('/gift/result');
-        }, 1500);
+        setResult(data);
+        setIsLoading(false);
+        router.push('/gift/result');
 
       } catch (err) {
         // console.error intentionally omitted to prevent Next.js dev overlay for expected errors

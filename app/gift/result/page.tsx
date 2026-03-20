@@ -9,10 +9,21 @@ export default function ResultPage() {
   const router = useRouter();
   const { result, resetAll } = useGift();
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   // If page is accessed directly without data, bounce to start
   useEffect(() => {
     if (!result) {
-      router.replace('/gift/start');
+      if (typeof window !== 'undefined') {
+        const savedResult = sessionStorage.getItem('giftsense_result');
+        if (!savedResult) {
+          router.replace('/gift/start');
+        }
+      } else {
+        router.replace('/gift/start');
+      }
     }
   }, [result, router]);
 

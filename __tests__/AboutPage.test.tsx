@@ -37,8 +37,6 @@ describe('AboutPage', () => {
     
     fireEvent.click(screen.getByText('Creative')); // personality
     fireEvent.click(screen.getByText('Food and drink')); // past gifts
-    fireEvent.click(screen.getByText('Outdoorsy — active lifestyle')); // lifestyle
-    fireEvent.click(screen.getByText('Celebrating a milestone')); // lifeStage
 
     const nextButton = screen.getByRole('button', { name: /Read the signals/i });
     expect(nextButton).not.toBeDisabled();

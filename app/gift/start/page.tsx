@@ -14,6 +14,10 @@ export default function StartPage() {
   const router = useRouter();
   const { formData, updateFormData } = useGift();
 
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   const isComplete =
     !!formData.relationship &&
     !!formData.recipientAge &&

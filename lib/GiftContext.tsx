@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { GiftFormData, GiftOutput, ChatSignals } from './types';
 
 // ─── Default state ──────────────────────────────────────────
@@ -39,9 +39,45 @@ const GiftContext = createContext<GiftContextType | undefined>(undefined);
 // ─── Provider ───────────────────────────────────────────────
 
 export function GiftProvider({ children }: { children: React.ReactNode }) {
-  const [formData, setFormData] = useState<GiftFormData>(DEFAULT_FORM_DATA);
-  const [result, setResult] = useState<GiftOutput | null>(null);
+  const [formData, setFormData] = useState<GiftFormData>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = sessionStorage.getItem('giftsense_form');
+        if (saved) return JSON.parse(saved);
+      } catch (err) {}
+    }
+    return DEFAULT_FORM_DATA;
+  });
+  
+  const [result, setResult] = useState<GiftOutput | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = sessionStorage.getItem('giftsense_result');
+        if (saved) return JSON.parse(saved);
+      } catch (err) {}
+    }
+    return null;
+  });
+  
   const [isLoading, setIsLoading] = useState(false);
+
+  // Sync back to sessionStorage when formData changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('giftsense_form', JSON.stringify(formData));
+    }
+  }, [formData]);
+
+  // Sync back to sessionStorage when result changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (result) {
+        sessionStorage.setItem('giftsense_result', JSON.stringify(result));
+      } else {
+        sessionStorage.removeItem('giftsense_result');
+      }
+    }
+  }, [result]);
 
   const updateFormData = useCallback((updates: Partial<GiftFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
@@ -55,6 +91,10 @@ export function GiftProvider({ children }: { children: React.ReactNode }) {
     setFormData(DEFAULT_FORM_DATA);
     setResult(null);
     setIsLoading(false);
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('giftsense_form');
+      sessionStorage.removeItem('giftsense_result');
+    }
   }, []);
 
   return (

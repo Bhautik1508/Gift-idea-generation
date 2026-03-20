@@ -31,7 +31,11 @@ async function extractTextFromFile(file: File): Promise<string> {
 
 export default function UploadPage() {
   const router = useRouter();
-  const { setChatSignals } = useGift();
+  const { setChatSignals, formData } = useGift();
+
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
 
   const [file, setFile] = useState<File | null>(null);
   const [recipientName, setRecipientName] = useState('');
@@ -147,7 +151,41 @@ export default function UploadPage() {
       {!signals ? (
         // ─── Upload & Extract Phase ───
         <div className="space-y-6">
-          {/* Dropzone */}
+          {formData.chatSignals ? (
+            <div className="bg-accent/5 border border-accent/20 rounded-2xl p-8 text-center animate-fade-in mb-8">
+              <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-white">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </span>
+              </div>
+              <h2 className="text-xl font-semibold mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
+                Chat signals already loaded
+              </h2>
+              {formData.chatSignals.standout_signal && (
+                <p className="text-sm text-foreground/80 italic max-w-md mx-auto mb-6">
+                  "{formData.chatSignals.standout_signal}"
+                </p>
+              )}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  type="button"
+                  onClick={() => router.push('/gift/thinking')}
+                  className="flex-1 max-w-[240px] mx-auto sm:mx-0 h-12 rounded-full bg-accent text-white font-medium hover:bg-accent-hover transition-all"
+                >
+                  Use these signals →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setChatSignals(undefined as any)}
+                  className="h-12 px-6 rounded-full border border-border text-foreground hover:bg-black/5 transition-colors"
+                >
+                  Replace
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Dropzone */}
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleFileDrop}
@@ -266,6 +304,28 @@ export default function UploadPage() {
               {isExtracting ? 'Extracting signals…' : 'Extract signals'}
             </button>
           </div>
+
+          {isExtracting && (
+            <div className="mt-8 flex flex-col items-center justify-center p-6 bg-surface border border-border rounded-xl animate-fade-in">
+              <div className="flex gap-1.5 mb-4">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="w-2.5 h-2.5 bg-accent rounded-full"
+                    style={{
+                      animation: `bounce 1.4s infinite ease-in-out both`,
+                      animationDelay: `${i * 0.16}s`
+                    }}
+                  />
+                ))}
+              </div>
+              <p className="text-sm font-medium text-foreground tracking-wide">
+                Reading the signals from your chat...
+              </p>
+            </div>
+          )}
+            </>
+          )}
         </div>
       ) : (
         // ─── Signal Preview Phase ───

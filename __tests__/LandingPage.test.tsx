@@ -28,7 +28,7 @@ describe('Landing Page', () => {
   test('renders trust signals', () => {
     render(<Home />);
     expect(screen.getByText('No sign-up required')).toBeInTheDocument();
-    expect(screen.getByText('Directions, not products')).toBeInTheDocument();
+    expect(screen.getByText('Specific, personalised ideas')).toBeInTheDocument();
     expect(screen.getByText('India-context aware')).toBeInTheDocument();
   });
 });
