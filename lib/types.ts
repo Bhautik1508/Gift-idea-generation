@@ -48,6 +48,7 @@ export interface GiftRecommendation {
   occasion_fit: 'strong' | 'good' | 'works';
   confidence: 'high' | 'medium' | 'low';
   search_keywords: string;
+  relevance_signal: string;
 }
 
 export interface GiftOutput {

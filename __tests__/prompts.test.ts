@@ -30,8 +30,8 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toContain('India');
   });
 
-  test('specifies 6 recommendations', () => {
-    expect(SYSTEM_PROMPT).toContain('exactly 6 recommendations');
+  test('specifies 8–12 recommendations', () => {
+    expect(SYSTEM_PROMPT).toContain('between 8 and 12 recommendations');
   });
 
   test('prohibits brand names', () => {

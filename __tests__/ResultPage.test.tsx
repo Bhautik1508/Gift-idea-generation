@@ -20,7 +20,8 @@ const mockResult: GiftOutput = {
       price_range: '₹1.5k–3k',
       occasion_fit: 'strong',
       confidence: 'high',
-      search_keywords: 'pottery class near me'
+      search_keywords: 'pottery class near me',
+      relevance_signal: 'loves making things'
     }
   ],
   confidence_overall: 'high',

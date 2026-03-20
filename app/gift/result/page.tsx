@@ -53,7 +53,7 @@ export default function ResultPage() {
       </div>
 
       {/* Product Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+      <div className="gap-6 max-w-5xl mx-auto" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
         {result.recommendations?.map((rec, idx) => (
           <ProductCard key={idx} product={rec} />
         ))}

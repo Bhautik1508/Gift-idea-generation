@@ -70,11 +70,16 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
 
-        {/* Header: Name + Tagline + Price */}
+        {/* Header: Name + Relevance Signal + Tagline + Price */}
         <div className="mb-6">
-          <h3 className="text-[1.3rem] leading-tight font-semibold mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
+          <h3 className="text-[1.3rem] leading-tight font-semibold mb-1" style={{ fontFamily: 'var(--font-heading)' }}>
             {product.product_name}
           </h3>
+          {product.relevance_signal && (
+            <p className="text-[10px] uppercase font-bold tracking-wider text-muted/70 mb-2">
+              Based on: {product.relevance_signal}
+            </p>
+          )}
           <p className="text-[13px] italic text-muted mb-3" style={{ fontFamily: 'var(--font-sans)' }}>
             {product.tagline}
           </p>
