@@ -63,16 +63,25 @@ export async function POST(req: Request) {
       },
     });
 
-    const text = result.response.text();
+    let text = result.response.text();
 
-    // Validate JSON before sending
-    const parsed = JSON.parse(text);
+    // Strip markdown code blocks if gemini included them despite responseMimeType
+    text = text.replace(/^```(json)?/, '').replace(/```$/, '').trim();
 
-    return NextResponse.json(parsed);
+    try {
+      const parsed = JSON.parse(text);
+      return NextResponse.json(parsed);
+    } catch (parseError) {
+      console.error('Failed to parse Gemini JSON output:', text);
+      return NextResponse.json(
+        { error: 'Failed to extract signals: Model returned invalid JSON format. Please try again.' },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error('Chat parse API error:', error);
     return NextResponse.json(
-      { error: 'Failed to extract signals from chat. Please try again.' },
+      { error: 'Failed to extract signals from chat. Please try again. Details: ' + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
     );
   }
