@@ -7,14 +7,17 @@ import type { GiftFormData, GiftOutput, ChatSignals } from './types';
 
 const DEFAULT_FORM_DATA: GiftFormData = {
   relationship: '',
+  recipientAge: '',
+  recipientGender: '',
   occasion: '',
-  occasionDate: '',
-  budget: '',
-  socialVisibility: '',
+  budget: [],
   recentChanges: '',
   interests: '',
   wishedFor: '',
-  observations: '',
+  personality: [],
+  pastGiftResponse: [],
+  lifestyle: '',
+  lifeStage: '',
 };
 
 // ─── Context shape ──────────────────────────────────────────

@@ -24,18 +24,26 @@ describe('AboutPage', () => {
       </GiftProvider>,
     );
     expect(screen.getByText('The Person')).toBeInTheDocument();
-    expect(screen.getByText('Step 2 of 3')).toBeInTheDocument();
+    expect(screen.getByText('Step 2 of 2')).toBeInTheDocument();
   });
 
-  test('submitting form goes to context page', () => {
+  test('submitting form goes to thinking page', () => {
+    // To enable the submit button, we must click the 4 required fields
     render(
       <GiftProvider>
         <AboutPage />
       </GiftProvider>,
     );
-    const nextButton = screen.getByRole('button', { name: /Next: Final details/i });
+    
+    fireEvent.click(screen.getByText('Creative')); // personality
+    fireEvent.click(screen.getByText('Food and drink')); // past gifts
+    fireEvent.click(screen.getByText('Outdoorsy — active lifestyle')); // lifestyle
+    fireEvent.click(screen.getByText('Celebrating a milestone')); // lifeStage
+
+    const nextButton = screen.getByRole('button', { name: /Read the signals/i });
+    expect(nextButton).not.toBeDisabled();
     fireEvent.click(nextButton);
-    expect(mockPush).toHaveBeenCalledWith('/gift/context');
+    expect(mockPush).toHaveBeenCalledWith('/gift/thinking');
   });
 
   test('back button calls router.back()', () => {

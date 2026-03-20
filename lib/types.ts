@@ -2,14 +2,17 @@
 
 export interface GiftFormData {
   relationship: string;
+  recipientAge: string;
+  recipientGender: string;
   occasion: string;
-  occasionDate: string;
-  budget: string;
-  socialVisibility: string;
+  budget: string[];
   recentChanges: string;
   interests: string;
   wishedFor: string;
-  observations: string;
+  personality: string[];
+  pastGiftResponse: string[];
+  lifestyle: string;
+  lifeStage: string;
   chatSignals?: ChatSignals;
   instagramSignals?: InstagramSignals;
 }
@@ -36,20 +39,20 @@ export interface InstagramSignals {
 
 // ─── LLM Output ─────────────────────────────────────────────
 
-export interface GiftDirection {
-  title: string;
-  territory: string;
-  why: string;
-  examples: string;
-  occasion_fit: string;
+export interface GiftRecommendation {
+  product_name: string;
+  category: 'Experience' | 'Product' | 'Consumable' | 'Wildcard';
+  tagline: string;
+  why_it_fits: string;
+  price_range: string;
+  occasion_fit: 'strong' | 'good' | 'works';
   confidence: 'high' | 'medium' | 'low';
+  search_keywords: string;
 }
 
 export interface GiftOutput {
+  recommendations: GiftRecommendation[];
   portrait: string;
-  directions: GiftDirection[];
-  social_note: string | null;
-  budget_note: string;
   confidence_overall: 'high' | 'medium' | 'low';
   confidence_reason: string;
 }
@@ -79,8 +82,10 @@ export interface RecipientProfile {
 
 export const RELATIONSHIPS = [
   'Parent',
+  'Sibling',
   'In-law',
   'Spouse / Partner',
+  'Child',
   'Close friend',
   'Colleague',
   'Distant relative',

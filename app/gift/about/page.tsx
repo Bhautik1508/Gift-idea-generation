@@ -6,13 +6,55 @@ import { useGift } from '@/lib/GiftContext';
 import ProgressBar from '@/components/ProgressBar';
 import QuestionCard from '@/components/QuestionCard';
 
+const PERSONALITIES = [
+  'Homebody', 'Adventurous', 'Creative', 'Practical', 'Social butterfly',
+  'Wellness-focused', 'Foodie', 'Tech enthusiast', 'Nature lover',
+  'Fitness-focused', 'Minimalist', 'Reader / learner'
+];
+
+const PAST_GIFTS = [
+  'Experiences (dining, travel, activities)', 'Useful everyday items',
+  'Personalised / sentimental things', 'Luxury or premium items',
+  'Wellness and self-care', 'Books / learning', 'Food and drink',
+  'Hobby-related', 'Not sure / first time gifting them'
+];
+
+const LIFESTYLES = [
+  'Very busy — always on the go', 'Balanced — work and personal time',
+  'Home-focused — loves being at home', 'Outdoorsy — active lifestyle'
+];
+
+const LIFE_STAGES = [
+  'Starting something new (job, city, chapter)',
+  'In a busy or stressful phase', 'Celebrating a milestone',
+  'Settled and content', 'Going through a change or transition',
+  'Building something (career, home, family)'
+];
+
 export default function AboutPage() {
   const router = useRouter();
   const { formData, updateFormData } = useGift();
 
+  const isComplete =
+    formData.personality.length > 0 &&
+    formData.pastGiftResponse.length > 0 &&
+    !!formData.lifestyle &&
+    !!formData.lifeStage;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push('/gift/context');
+    if (isComplete) {
+      router.push('/gift/thinking');
+    }
+  };
+
+  const handleMultiToggle = (field: 'personality' | 'pastGiftResponse', value: string, max: number) => {
+    const current = formData[field] || [];
+    if (current.includes(value)) {
+      updateFormData({ [field]: current.filter(x => x !== value) });
+    } else if (current.length < max) {
+      updateFormData({ [field]: [...current, value] });
+    }
   };
 
   const goBack = () => {
@@ -22,7 +64,7 @@ export default function AboutPage() {
   return (
     <div className="animate-fade-in">
       <div className="mb-10">
-        <ProgressBar currentStep={2} totalSteps={3} />
+        <ProgressBar currentStep={2} totalSteps={2} />
         <h1 className="text-3xl font-semibold mt-6 mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
           The Person
         </h1>
@@ -30,8 +72,78 @@ export default function AboutPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-10">
-        {/* Q5: Life changes */}
-        <QuestionCard label="What has changed in their life recently?">
+        {/* Q5: Personality */}
+        <QuestionCard label="What best describes their personality?" description="Pick up to 3">
+          <div className="flex flex-wrap gap-3">
+            {PERSONALITIES.map((p) => {
+              const isActive = formData.personality?.includes(p);
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => handleMultiToggle('personality', p, 3)}
+                  className={`pill-button ${isActive ? 'active' : ''}`}
+                >
+                  {p}
+                </button>
+              );
+            })}
+          </div>
+        </QuestionCard>
+
+        {/* Q6: Past gifts */}
+        <QuestionCard label="What kind of gifts have they responded well to in the past?" description="Pick up to 2">
+          <div className="flex flex-wrap gap-3">
+            {PAST_GIFTS.map((g) => {
+              const isActive = formData.pastGiftResponse?.includes(g);
+              return (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => handleMultiToggle('pastGiftResponse', g, 2)}
+                  className={`pill-button ${isActive ? 'active' : ''}`}
+                >
+                  {g}
+                </button>
+              );
+            })}
+          </div>
+        </QuestionCard>
+
+        {/* Q7: Lifestyle */}
+        <QuestionCard label="What is their lifestyle like?">
+          <div className="flex flex-wrap gap-3">
+            {LIFESTYLES.map((ls) => (
+              <button
+                key={ls}
+                type="button"
+                onClick={() => updateFormData({ lifestyle: ls })}
+                className={`pill-button ${formData.lifestyle === ls ? 'active' : ''}`}
+              >
+                {ls}
+              </button>
+            ))}
+          </div>
+        </QuestionCard>
+
+        {/* Q8: Life Stage */}
+        <QuestionCard label="Which of these best fits them right now?">
+          <div className="flex flex-wrap gap-3">
+            {LIFE_STAGES.map(( stage ) => (
+              <button
+                key={stage}
+                type="button"
+                onClick={() => updateFormData({ lifeStage: stage })}
+                className={`pill-button ${formData.lifeStage === stage ? 'active' : ''}`}
+              >
+                {stage}
+              </button>
+            ))}
+          </div>
+        </QuestionCard>
+
+        {/* Q9: Life changes */}
+        <QuestionCard label="What has changed in their life recently? (Optional)">
           <textarea
             value={formData.recentChanges}
             onChange={(e) => updateFormData({ recentChanges: e.target.value })}
@@ -40,8 +152,8 @@ export default function AboutPage() {
           />
         </QuestionCard>
 
-        {/* Q6: Interests */}
-        <QuestionCard label="What do they care about that most people wouldn't know?">
+        {/* Q10: Interests */}
+        <QuestionCard label="What do they care about that most people wouldn't know? (Optional)">
           <textarea
             value={formData.interests}
             onChange={(e) => updateFormData({ interests: e.target.value })}
@@ -50,8 +162,8 @@ export default function AboutPage() {
           />
         </QuestionCard>
 
-        {/* Q7: Wishes */}
-        <QuestionCard label="Is there something they've mentioned wanting but wouldn't buy themselves?">
+        {/* Q11: Wishes */}
+        <QuestionCard label="Is there something they've mentioned wanting but wouldn't buy themselves? (Optional)">
           <textarea
             value={formData.wishedFor}
             onChange={(e) => updateFormData({ wishedFor: e.target.value })}
@@ -70,9 +182,14 @@ export default function AboutPage() {
           </button>
           <button
             type="submit"
-            className="flex-1 h-14 rounded-full bg-accent text-white font-medium text-lg hover:bg-accent-hover shadow-md transition-colors cursor-pointer"
+            disabled={!isComplete}
+            className={`flex-1 h-14 rounded-full font-medium text-lg transition-all ${
+              isComplete
+                ? 'bg-accent text-white hover:bg-accent-hover shadow-md cursor-pointer'
+                : 'bg-muted/10 text-muted cursor-not-allowed'
+            }`}
           >
-            Next: Final details
+            Read the signals
           </button>
         </div>
       </form>

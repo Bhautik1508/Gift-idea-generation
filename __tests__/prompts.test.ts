@@ -4,14 +4,17 @@ import type { GiftFormData } from '@/lib/types';
 
 const BASE_FORM: GiftFormData = {
   relationship: 'Close friend',
+  recipientAge: '26–35',
+  recipientGender: 'Woman',
   occasion: 'Birthday',
-  occasionDate: '',
-  budget: '₹3k–7.5k',
-  socialVisibility: 'Just them (private)',
+  budget: ['₹3k–7.5k'],
   recentChanges: 'Got a new job at a startup',
   interests: 'Loves pottery and cooking',
   wishedFor: 'Always talks about wanting a nice knife set',
-  observations: 'Seemed stressed last week about the move',
+  personality: ['Creative', 'Foodie'],
+  pastGiftResponse: ['Experiences (dining, travel, activities)'],
+  lifestyle: 'Very busy — always on the go',
+  lifeStage: 'Starting something new (job, city, chapter)',
 };
 
 describe('SYSTEM_PROMPT', () => {
@@ -27,8 +30,8 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toContain('India');
   });
 
-  test('specifies 3 directions', () => {
-    expect(SYSTEM_PROMPT).toContain('exactly 3 directions');
+  test('specifies 6 recommendations', () => {
+    expect(SYSTEM_PROMPT).toContain('exactly 6 recommendations');
   });
 
   test('prohibits brand names', () => {
@@ -42,11 +45,9 @@ describe('buildUserPrompt', () => {
     expect(prompt).toContain('Close friend');
     expect(prompt).toContain('Birthday');
     expect(prompt).toContain('₹3k–7.5k');
-    expect(prompt).toContain('Just them (private)');
     expect(prompt).toContain('Got a new job at a startup');
     expect(prompt).toContain('Loves pottery and cooking');
     expect(prompt).toContain('nice knife set');
-    expect(prompt).toContain('stressed last week');
   });
 
   test('shows "Not mentioned" for empty fields', () => {
@@ -55,7 +56,10 @@ describe('buildUserPrompt', () => {
       recentChanges: '',
       interests: '',
       wishedFor: '',
-      observations: '',
+      personality: [],
+      pastGiftResponse: [],
+      lifestyle: '',
+      lifeStage: '',
     };
     const prompt = buildUserPrompt(emptyForm);
     expect(prompt).toContain('Not mentioned');
@@ -65,34 +69,13 @@ describe('buildUserPrompt', () => {
     const emptyForm: GiftFormData = {
       ...BASE_FORM,
       relationship: '',
+      recipientAge: '',
+      recipientGender: '',
       occasion: '',
-      budget: '',
-      socialVisibility: '',
+      budget: [],
     };
     const prompt = buildUserPrompt(emptyForm);
     expect(prompt).toContain('Not specified');
-  });
-
-  test('includes days until occasion when date is given', () => {
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + 10);
-    const form: GiftFormData = {
-      ...BASE_FORM,
-      occasionDate: futureDate.toISOString().split('T')[0],
-    };
-    const prompt = buildUserPrompt(form);
-    expect(prompt).toContain('10 days');
-  });
-
-  test('handles past date', () => {
-    const pastDate = new Date();
-    pastDate.setDate(pastDate.getDate() - 5);
-    const form: GiftFormData = {
-      ...BASE_FORM,
-      occasionDate: pastDate.toISOString().split('T')[0],
-    };
-    const prompt = buildUserPrompt(form);
-    expect(prompt).toContain('Already passed');
   });
 
   test('does NOT include chat signals block when not provided', () => {

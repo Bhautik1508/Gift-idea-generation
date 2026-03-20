@@ -2,13 +2,14 @@ import {
   RELATIONSHIPS,
   OCCASIONS,
   BUDGETS,
-  SOCIAL_VISIBILITY,
 } from '@/lib/types';
 
 describe('Constants', () => {
-  test('RELATIONSHIPS has 7 options', () => {
-    expect(RELATIONSHIPS).toHaveLength(7);
+  test('RELATIONSHIPS has 9 options', () => {
+    expect(RELATIONSHIPS).toHaveLength(9);
     expect(RELATIONSHIPS).toContain('Parent');
+    expect(RELATIONSHIPS).toContain('Sibling');
+    expect(RELATIONSHIPS).toContain('Child');
     expect(RELATIONSHIPS).toContain('Close friend');
     expect(RELATIONSHIPS).toContain('Other');
   });
@@ -26,11 +27,5 @@ describe('Constants', () => {
     expect(BUDGETS).toHaveLength(5);
     expect(BUDGETS[0]).toContain('₹');
     expect(BUDGETS[4]).toBe('Above ₹15k');
-  });
-
-  test('SOCIAL_VISIBILITY has 5 options', () => {
-    expect(SOCIAL_VISIBILITY).toHaveLength(5);
-    expect(SOCIAL_VISIBILITY).toContain('Just them (private)');
-    expect(SOCIAL_VISIBILITY).toContain('Public occasion (wedding etc.)');
   });
 });

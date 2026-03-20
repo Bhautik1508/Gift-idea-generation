@@ -16,7 +16,7 @@ function TestConsumer() {
       <button data-testid="update-relationship" onClick={() => updateFormData({ relationship: 'Parent' })}>
         Update
       </button>
-      <button data-testid="update-multiple" onClick={() => updateFormData({ occasion: 'Diwali', budget: '₹3k–7.5k' })}>
+      <button data-testid="update-multiple" onClick={() => updateFormData({ occasion: 'Diwali', budget: ['₹3k–7.5k'] })}>
         Update Multiple
       </button>
       <button data-testid="toggle-loading" onClick={() => setIsLoading(!isLoading)}>
@@ -27,9 +27,7 @@ function TestConsumer() {
         onClick={() =>
           setResult({
             portrait: 'Test portrait',
-            directions: [],
-            social_note: null,
-            budget_note: 'test',
+            recommendations: [],
             confidence_overall: 'high',
             confidence_reason: 'test',
           })

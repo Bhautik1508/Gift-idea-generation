@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import ResultPage from '@/app/gift/result/page';
 import { GiftProvider, useGift } from '@/lib/GiftContext';
 import { useRouter } from 'next/navigation';
@@ -10,19 +10,19 @@ jest.mock('next/navigation', () => ({
 }));
 
 const mockResult: GiftOutput = {
-  portrait: 'A test portrait.',
-  directions: [
+  portrait: 'We think they are a creative soul.',
+  recommendations: [
     {
-      title: 'Direction 1',
-      territory: 'Test',
-      why: 'Why 1',
-      examples: 'Example 1',
-      occasion_fit: 'Fit 1',
-      confidence: 'high'
+      product_name: 'Pottery Class',
+      category: 'Experience',
+      tagline: 'Get your hands dirty',
+      why_it_fits: 'Because they love making things',
+      price_range: '₹1.5k–3k',
+      occasion_fit: 'strong',
+      confidence: 'high',
+      search_keywords: 'pottery class near me'
     }
   ],
-  social_note: 'Social test',
-  budget_note: 'Budget test',
   confidence_overall: 'high',
   confidence_reason: 'Reason test'
 };
@@ -57,7 +57,7 @@ describe('ResultPage', () => {
     expect(mockReplace).toHaveBeenCalledWith('/gift/start');
   });
 
-  test('renders portrait and directions when result exists', () => {
+  test('renders portrait banner and product cards when result exists', () => {
     render(
       <GiftProvider>
         <TestWrapper>
@@ -66,34 +66,13 @@ describe('ResultPage', () => {
       </GiftProvider>
     );
     
-    expect(screen.getByText(/A test portrait\./)).toBeInTheDocument();
-    expect(screen.getByText(/Direction 1/)).toBeInTheDocument();
-  });
+    // Check Portrait Banner
+    expect(screen.getByText(/"We think they are a creative soul\."/)).toBeInTheDocument();
+    expect(screen.getByText(/STRONG SIGNAL/i)).toBeInTheDocument();
 
-  test('shows generic notes', () => {
-    render(
-      <GiftProvider>
-        <TestWrapper>
-          <ResultPage />
-        </TestWrapper>
-      </GiftProvider>
-    );
-    
-    expect(screen.getByText('Social test')).toBeInTheDocument();
-    expect(screen.getByText('Budget test')).toBeInTheDocument();
-  });
-
-  test('selects direction and reveals actions', () => {
-    render(
-      <GiftProvider>
-        <TestWrapper>
-          <ResultPage />
-        </TestWrapper>
-      </GiftProvider>
-    );
-    
-    fireEvent.click(screen.getByText('This feels right'));
-    expect(screen.getByText('You chose Direction 1')).toBeInTheDocument();
-    expect(screen.getByText('Copy directions')).toBeInTheDocument();
+    // Check Product Card
+    expect(screen.getByText('Pottery Class')).toBeInTheDocument();
+    expect(screen.getByText('Experience')).toBeInTheDocument();
+    expect(screen.getByText('₹1.5k–3k')).toBeInTheDocument();
   });
 });

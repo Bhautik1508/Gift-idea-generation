@@ -24,7 +24,7 @@ describe('StartPage', () => {
       </GiftProvider>,
     );
     expect(screen.getByText('The Basics')).toBeInTheDocument();
-    expect(screen.getByText('Step 1 of 3')).toBeInTheDocument();
+    expect(screen.getByText('Step 1 of 2')).toBeInTheDocument();
   });
 
   test('next button is disabled initially', () => {
@@ -48,6 +48,12 @@ describe('StartPage', () => {
     const comboboxes = screen.getAllByRole('combobox');
     fireEvent.change(comboboxes[0], { target: { value: 'Close friend' } });
     fireEvent.change(comboboxes[1], { target: { value: 'Birthday' } });
+
+    // Click age and gender
+    const ageButton = screen.getByText('26–35');
+    fireEvent.click(ageButton);
+    const genderButton = screen.getByText('Woman');
+    fireEvent.click(genderButton);
 
     const budgetButton = screen.getByText('₹3k–7.5k');
     fireEvent.click(budgetButton);

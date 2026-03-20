@@ -7,15 +7,19 @@ import ProgressBar from '@/components/ProgressBar';
 import QuestionCard from '@/components/QuestionCard';
 import { RELATIONSHIPS, OCCASIONS, BUDGETS } from '@/lib/types';
 
+const AGES = ['Under 18', '18–25', '26–35', '36–50', '51–65', '65+'];
+const GENDERS = ['Woman', 'Man', 'Non-binary', 'Prefer not to say'];
+
 export default function StartPage() {
   const router = useRouter();
   const { formData, updateFormData } = useGift();
 
   const isComplete =
     !!formData.relationship &&
+    !!formData.recipientAge &&
+    !!formData.recipientGender &&
     !!formData.occasion &&
-    !!formData.budget;
-    // Note: occasionDate is optional but recommended
+    formData.budget.length > 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,10 +28,19 @@ export default function StartPage() {
     }
   };
 
+  const handleBudgetToggle = (b: string) => {
+    const current = formData.budget || [];
+    if (current.includes(b)) {
+      updateFormData({ budget: current.filter(x => x !== b) });
+    } else {
+      updateFormData({ budget: [...current, b] });
+    }
+  };
+
   return (
     <div className="animate-fade-in">
       <div className="mb-10">
-        <ProgressBar currentStep={1} totalSteps={3} />
+        <ProgressBar currentStep={1} totalSteps={2} />
         <h1 className="text-3xl font-semibold mt-6 mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
           The Basics
         </h1>
@@ -50,7 +63,39 @@ export default function StartPage() {
           </select>
         </QuestionCard>
 
-        {/* Q2: Occasion */}
+        {/* Q2: Age */}
+        <QuestionCard label="How old are they (approximately)?">
+          <div className="flex flex-wrap gap-3">
+            {AGES.map((age) => (
+              <button
+                key={age}
+                type="button"
+                onClick={() => updateFormData({ recipientAge: age })}
+                className={`pill-button ${formData.recipientAge === age ? 'active' : ''}`}
+              >
+                {age}
+              </button>
+            ))}
+          </div>
+        </QuestionCard>
+
+        {/* Q3: Gender */}
+        <QuestionCard label="Their gender?">
+          <div className="flex flex-wrap gap-3">
+            {GENDERS.map((gender) => (
+              <button
+                key={gender}
+                type="button"
+                onClick={() => updateFormData({ recipientGender: gender })}
+                className={`pill-button ${formData.recipientGender === gender ? 'active' : ''}`}
+              >
+                {gender}
+              </button>
+            ))}
+          </div>
+        </QuestionCard>
+
+        {/* Q4: Occasion */}
         <QuestionCard label="What is the occasion?">
           <select
             value={formData.occasion}
@@ -65,30 +110,28 @@ export default function StartPage() {
           </select>
         </QuestionCard>
 
-        {/* Q3: Date */}
-        <QuestionCard label="When is it?" description="Helps us factor in timing and urgency.">
-          <input
-            type="date"
-            value={formData.occasionDate}
-            onChange={(e) => updateFormData({ occasionDate: e.target.value })}
-            className="w-full h-14 px-4 rounded-xl border border-border bg-surface text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
-          />
-        </QuestionCard>
-
-        {/* Q4: Budget */}
-        <QuestionCard label="What is your budget?">
+        {/* Q5: Budget */}
+        <QuestionCard label="What is your budget?" description="Select all that apply.">
           <div className="flex flex-wrap gap-3">
-            {BUDGETS.map((budget) => (
-              <button
-                key={budget}
-                type="button"
-                onClick={() => updateFormData({ budget })}
-                className={`pill-button ${formData.budget === budget ? 'active' : ''}`}
-              >
-                {budget}
-              </button>
-            ))}
+            {BUDGETS.map((budget) => {
+              const isActive = formData.budget?.includes(budget);
+              return (
+                <button
+                  key={budget}
+                  type="button"
+                  onClick={() => handleBudgetToggle(budget)}
+                  className={`pill-button ${isActive ? 'active' : ''}`}
+                >
+                  {budget}
+                </button>
+              );
+            })}
           </div>
+          {formData.budget.length === 0 && (
+            <p className="mt-2 text-sm select-none text-muted transition-opacity opacity-100">
+              Please select at least one budget range.
+            </p>
+          )}
         </QuestionCard>
 
         <div className="pt-6 border-t border-border">
