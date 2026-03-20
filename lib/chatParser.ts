@@ -1,5 +1,5 @@
 // ─── WhatsApp Chat Parser ───────────────────────────────────
-// Parses India-locale WhatsApp .txt exports and extracts
+// Parses WhatsApp .txt exports across all common formats and extracts
 // the recipient's messages, anonymized and truncated.
 
 export interface ParsedMessage {
@@ -7,10 +7,23 @@ export interface ParsedMessage {
   message: string;
 }
 
-// Matches: "DD/MM/YY, HH:MM - Name: Message" (India locale)
-// Also handles: "DD/MM/YYYY, HH:MM AM/PM - Name: Message"
-const WHATSAPP_LINE_REGEX =
-  /^\d{1,2}\/\d{1,2}\/\d{2,4},\s\d{1,2}:\d{2}(?:\s?[APap][Mm])?\s-\s(.+?):\s(.+)$/;
+// ─── Format-specific regexes ────────────────────────────────
+// Android: "DD/MM/YY, HH:MM - Name: Message"
+// Android 12h: "DD/MM/YY, h:mm AM - Name: Message"  
+// Android long year: "DD/MM/YYYY, HH:MM - Name: Message"
+const ANDROID_REGEX =
+  /^\d{1,2}\/\d{1,2}\/\d{2,4},?\s\d{1,2}:\d{2}(?::\d{2})?(?:\s?[APap][Mm])?\s[-–—]\s(.+?):\s(.+)$/;
+
+// iOS: "[DD/MM/YY, HH:MM:SS] Name: Message"
+// iOS variants with AM/PM: "[DD/MM/YY, h:mm:ss AM] Name: Message"
+const IOS_REGEX =
+  /^\[?\d{1,2}\/\d{1,2}\/\d{2,4},?\s\d{1,2}:\d{2}(?::\d{2})?(?:\s?[APap][Mm])?\]?\s(.+?):\s(.+)$/;
+
+// US format: "M/D/YY, HH:MM - Name: Message"
+const US_REGEX =
+  /^\d{1,2}\/\d{1,2}\/\d{2,4},?\s\d{1,2}:\d{2}(?::\d{2})?(?:\s?[APap][Mm])?\s[-–—]\s(.+?):\s(.+)$/;
+
+const ALL_REGEXES = [ANDROID_REGEX, IOS_REGEX, US_REGEX];
 
 // System messages to filter out
 const SYSTEM_MESSAGES = [
@@ -29,7 +42,36 @@ const SYSTEM_MESSAGES = [
   'disappeared',
   'turned on disappearing messages',
   'turned off disappearing messages',
+  'waiting for this message',
+  'you blocked this contact',
+  'you unblocked this contact',
 ];
+
+/**
+ * Strips BOM, zero-width characters, and Unicode directional markers
+ * that WhatsApp injects into exports.
+ */
+function cleanRaw(raw: string): string {
+  return raw
+    .replace(/^\uFEFF/, '')               // BOM
+    .replace(/[\u200E\u200F\u202A-\u202E\u2066-\u2069]/g, '') // LTR/RTL markers
+    .replace(/\u200B/g, '')               // zero-width space
+    .replace(/\r\n/g, '\n')              // normalize line endings
+    .replace(/\r/g, '\n');
+}
+
+/**
+ * Tries all known WhatsApp line formats. Returns [sender, message] or null.
+ */
+function matchLine(line: string): [string, string] | null {
+  for (const regex of ALL_REGEXES) {
+    const match = line.match(regex);
+    if (match) {
+      return [match[1].trim(), match[2].trim()];
+    }
+  }
+  return null;
+}
 
 /**
  * Parses raw WhatsApp export text into structured messages.
@@ -37,17 +79,17 @@ const SYSTEM_MESSAGES = [
  * to the previous message.
  */
 export function parseWhatsAppChat(raw: string): ParsedMessage[] {
-  const lines = raw.split('\n');
+  const cleaned = cleanRaw(raw);
+  const lines = cleaned.split('\n');
   const messages: ParsedMessage[] = [];
 
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed) continue;
 
-    const match = trimmed.match(WHATSAPP_LINE_REGEX);
-    if (match) {
-      const sender = match[1].trim();
-      const message = match[2].trim();
+    const parsed = matchLine(trimmed);
+    if (parsed) {
+      const [sender, message] = parsed;
 
       // Skip system messages
       const isSystem = SYSTEM_MESSAGES.some((sys) =>
@@ -58,8 +100,15 @@ export function parseWhatsAppChat(raw: string): ParsedMessage[] {
       // Skip media/sticker/deleted messages
       if (
         message === '<Media omitted>' ||
-        message === 'This message was deleted' ||
-        message === 'You deleted this message' ||
+        message === 'image omitted' ||
+        message === 'video omitted' ||
+        message === 'audio omitted' ||
+        message === 'sticker omitted' ||
+        message === 'document omitted' ||
+        message === 'GIF omitted' ||
+        message === 'Contact card omitted' ||
+        message.toLowerCase() === 'this message was deleted' ||
+        message.toLowerCase() === 'you deleted this message' ||
         message.startsWith('‎') // zero-width character (stickers, etc.)
       ) {
         continue;

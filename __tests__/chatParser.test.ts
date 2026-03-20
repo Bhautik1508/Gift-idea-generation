@@ -61,6 +61,30 @@ describe('parseWhatsAppChat', () => {
     const messages = parseWhatsAppChat('This is not a WhatsApp chat');
     expect(messages).toEqual([]);
   });
+
+  test('parses iOS bracket format', () => {
+    const iosChat = `[12/03/24, 10:16:23] Priya: Hey from iOS!
+[12/03/24, 10:17:45] You: Hello!
+[12/03/24, 10:18:02] Priya: How are you?`;
+    const messages = parseWhatsAppChat(iosChat);
+    expect(messages.length).toBe(3);
+    expect(messages[0].sender).toBe('Priya');
+    expect(messages[0].message).toBe('Hey from iOS!');
+  });
+
+  test('handles BOM and unicode markers', () => {
+    const bomChat = `\uFEFF12/03/24, 10:16 AM - \u200EPriya: Hello with BOM`;
+    const messages = parseWhatsAppChat(bomChat);
+    expect(messages.length).toBe(1);
+    expect(messages[0].sender).toBe('Priya');
+  });
+
+  test('parses 24-hour format without AM/PM', () => {
+    const chat24h = `12/03/24, 22:16 - Priya: Late night message`;
+    const messages = parseWhatsAppChat(chat24h);
+    expect(messages.length).toBe(1);
+    expect(messages[0].message).toBe('Late night message');
+  });
 });
 
 describe('filterByRecipient', () => {
