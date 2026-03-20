@@ -27,7 +27,7 @@ describe('AboutPage', () => {
     expect(screen.getByText('Step 2 of 2')).toBeInTheDocument();
   });
 
-  test('submitting form goes to thinking page', () => {
+  test('submitting form goes to upload page', () => {
     // To enable the submit button, we must click the 4 required fields
     render(
       <GiftProvider>
@@ -43,7 +43,7 @@ describe('AboutPage', () => {
     const nextButton = screen.getByRole('button', { name: /Read the signals/i });
     expect(nextButton).not.toBeDisabled();
     fireEvent.click(nextButton);
-    expect(mockPush).toHaveBeenCalledWith('/gift/thinking');
+    expect(mockPush).toHaveBeenCalledWith('/gift/upload');
   });
 
   test('back button calls router.back()', () => {

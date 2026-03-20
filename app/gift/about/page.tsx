@@ -44,7 +44,7 @@ export default function AboutPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isComplete) {
-      router.push('/gift/thinking');
+      router.push('/gift/upload');
     }
   };
 
