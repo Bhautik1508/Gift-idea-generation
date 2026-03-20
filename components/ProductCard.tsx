@@ -110,15 +110,15 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       {/* Footer CTA Strip */}
       <div className="border-t border-border bg-gray-50/50 p-4 shrink-0">
-        <button
-          disabled
-          data-search={product.search_keywords}
-          title="Shopping links coming soon"
-          className="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-border rounded-lg text-sm font-medium text-muted cursor-not-allowed group"
+        <a
+          href={`https://www.google.com/search?q=${encodeURIComponent(product.search_keywords)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-border rounded-lg text-sm font-medium text-foreground hover:border-accent hover:text-accent hover:shadow-sm transition-all group"
         >
           <span>Find this</span>
-          <span className="opacity-50">→</span>
-        </button>
+          <span className="opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+        </a>
       </div>
     </div>
   );

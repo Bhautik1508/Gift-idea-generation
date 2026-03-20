@@ -55,10 +55,16 @@ export default function ResultPage() {
         ))}
       </div>
 
-      <div className="flex justify-center mt-16">
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-16 pb-8">
+        <button
+          onClick={() => router.push('/gift/about')}
+          className="h-12 px-8 rounded-full border border-border bg-surface text-foreground font-medium hover:border-accent/50 hover:bg-accent/5 transition-all shadow-sm"
+        >
+          Refine for same person
+        </button>
         <button
           onClick={handleStartOver}
-          className="text-sm font-medium text-muted hover:text-foreground transition-colors underline underline-offset-4"
+          className="text-sm font-medium text-muted hover:text-foreground transition-colors underline underline-offset-4 sm:ml-2"
         >
           Start over for someone else
         </button>

@@ -7,6 +7,14 @@ export const metadata: Metadata = {
   description:
     "Tell us about the person. We'll give you directions — not a product list — and the confidence to buy.",
   keywords: ["gift", "gifting", "AI", "recommendation", "India", "Diwali", "birthday", "wedding"],
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://giftsense.vercel.app'),
+  openGraph: {
+    images: '/og-image.svg',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: '/og-image.svg',
+  },
 };
 
 export default function RootLayout({

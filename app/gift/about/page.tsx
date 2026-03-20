@@ -165,7 +165,7 @@ export default function AboutPage() {
             value={formData.recentChanges}
             onChange={(e) => updateFormData({ recentChanges: e.target.value })}
             placeholder="New job, moved cities, had a baby, health change, relationship — anything that's shifted for them lately"
-            className="w-full h-32 p-4 rounded-xl border border-border bg-surface text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+            className="w-full h-24 p-4 rounded-xl border border-border bg-surface text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
           />
         </QuestionCard>
 
@@ -175,7 +175,7 @@ export default function AboutPage() {
             value={formData.interests}
             onChange={(e) => updateFormData({ interests: e.target.value })}
             placeholder="A hobby they're obsessed with, something they always talk about, their guilty pleasure"
-            className="w-full h-32 p-4 rounded-xl border border-border bg-surface text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+            className="w-full h-24 p-4 rounded-xl border border-border bg-surface text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
           />
         </QuestionCard>
 
@@ -185,7 +185,7 @@ export default function AboutPage() {
             value={formData.wishedFor}
             onChange={(e) => updateFormData({ wishedFor: e.target.value })}
             placeholder="Even a passing comment counts — 'I should really try...' or 'One day I'll get...'"
-            className="w-full h-32 p-4 rounded-xl border border-border bg-surface text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+            className="w-full h-24 p-4 rounded-xl border border-border bg-surface text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
           />
         </QuestionCard>
 
