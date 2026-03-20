@@ -42,17 +42,35 @@ export async function POST(req: Request) {
       contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
       systemInstruction: SYSTEM_PROMPT,
       generationConfig: {
-        temperature: 0.7, // Good balance of creativity and strict formatting
-        responseMimeType: 'application/json', // Force JSON output
+        temperature: 0.4, // Lowered from 0.7 for better structural reliability
+        responseMimeType: 'application/json',
       },
     });
 
-    const text = result.response.text();
+    let text = result.response.text();
+    let parsed;
     
-    // Quick validation that it's parseable before sending
-    JSON.parse(text);
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      // First parse failed — ask Gemini to fix it once
+      const retryResult = await model.generateContent({
+        contents: [
+          { role: 'user', parts: [{ text: userPrompt }] },
+          { role: 'model', parts: [{ text: text }] },
+          { role: 'user', parts: [{ text: 'Your previous response was not valid JSON. Return only the raw JSON object with no extra text, markdown, or code blocks.' }] },
+        ],
+        systemInstruction: SYSTEM_PROMPT,
+        generationConfig: {
+          temperature: 0.2,
+          responseMimeType: 'application/json',
+        },
+      });
+      text = retryResult.response.text();
+      parsed = JSON.parse(text); // If this fails, let it throw to the outer catch
+    }
 
-    return new NextResponse(text, {
+    return new NextResponse(JSON.stringify(parsed), {
       headers: {
         'Content-Type': 'application/json',
       },

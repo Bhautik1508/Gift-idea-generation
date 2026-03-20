@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useGift } from '@/lib/GiftContext';
 import JSZip from 'jszip';
 import type { ChatSignals } from '@/lib/types';
+import { parseWhatsAppChat, extractSenders } from '@/lib/chatParser';
 
 const ACCEPTED_EXTENSIONS = ['.txt', '.zip'];
 
@@ -36,14 +37,33 @@ export default function UploadPage() {
   const [isExtracting, setIsExtracting] = useState(false);
   const [error, setError] = useState('');
   const [signals, setSignals] = useState<ChatSignals | null>(null);
+  const [detectedSenders, setDetectedSenders] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const processFileForSenders = async (fileToProcess: File) => {
+    try {
+      const text = await extractTextFromFile(fileToProcess);
+      const messages = parseWhatsAppChat(text);
+      if (messages.length === 0) {
+        setError("We couldn't read this file. Make sure it's a WhatsApp export (.txt or .zip) and try again.");
+        setFile(null);
+        setDetectedSenders([]);
+        return;
+      }
+      setDetectedSenders(extractSenders(messages));
+      setFile(fileToProcess);
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to read file');
+      setFile(null);
+    }
+  };
 
   const handleFileDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const dropped = e.dataTransfer.files[0];
     if (dropped && isAcceptedFile(dropped.name)) {
-      setFile(dropped);
-      setError('');
+      processFileForSenders(dropped);
     } else {
       setError('Please upload a .txt or .zip file (WhatsApp export)');
     }
@@ -52,8 +72,7 @@ export default function UploadPage() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (selected && isAcceptedFile(selected.name)) {
-      setFile(selected);
-      setError('');
+      processFileForSenders(selected);
     } else if (selected) {
       setError('Please upload a .txt or .zip file (WhatsApp export)');
     }
@@ -104,6 +123,7 @@ export default function UploadPage() {
     setSignals(null);
     setError('');
     setRecipientName('');
+    setDetectedSenders([]);
   };
 
   const canExtract = !!file && !!recipientName.trim() && !isExtracting;
@@ -165,25 +185,46 @@ export default function UploadPage() {
             )}
           </div>
 
-          {/* Recipient Name */}
+          {/* Recipient Name Picker */}
           {file && (
-            <div className="animate-fade-in">
-              <label className="block mb-2">
-                <span className="text-sm font-medium text-foreground">
-                  Who is the recipient in this chat?
+            <div className="animate-fade-in space-y-4">
+              <div>
+                <span className="text-sm font-medium text-foreground block mb-3">
+                  Who in this chat are you gifting?
                 </span>
-                <span className="text-xs text-muted block mt-0.5">
-                  Type their name exactly as it appears in WhatsApp
-                </span>
-              </label>
-              <input
-                type="text"
-                value={recipientName}
-                onChange={(e) => setRecipientName(e.target.value)}
-                placeholder="e.g. Priya, Mom, Rahul Sharma"
-                className="w-full h-12 px-4 rounded-xl border border-border bg-surface text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
-                data-testid="recipient-input"
-              />
+                <div className="flex flex-wrap gap-2">
+                  {detectedSenders.map((sender) => (
+                    <button
+                      key={sender}
+                      type="button"
+                      onClick={() => setRecipientName(sender)}
+                      className={`px-4 py-2 rounded-full border text-sm font-medium transition-colors ${
+                        recipientName === sender
+                          ? 'border-accent bg-accent text-white'
+                          : 'border-border bg-surface hover:border-accent/50 text-foreground'
+                      }`}
+                    >
+                      {sender}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="pt-2">
+                <label className="block mb-2">
+                  <span className="text-xs text-muted block mt-0.5">
+                    Not listed? Type their name manually
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  value={recipientName}
+                  onChange={(e) => setRecipientName(e.target.value)}
+                  placeholder="e.g. Priya, Mom, Rahul Sharma"
+                  className="w-full h-12 px-4 rounded-xl border border-border bg-surface text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                  data-testid="recipient-input"
+                />
+              </div>
             </div>
           )}
 
@@ -196,6 +237,13 @@ export default function UploadPage() {
 
           {/* Actions */}
           <div className="flex gap-4 pt-4">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="h-14 px-6 rounded-full border border-border text-foreground font-medium hover:bg-black/5 transition-colors cursor-pointer"
+            >
+              ← Back
+            </button>
             <button
               type="button"
               onClick={handleSkip}

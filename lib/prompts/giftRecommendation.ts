@@ -28,7 +28,7 @@ OUTPUT SCHEMA:
       "relevance_signal": "string — max 10 words naming the specific input that drove this recommendation"
     }
   ],
-  "portrait": "string — 1–2 sentence summary of who this person is.",
+  "portrait": "string — Start with 'We think'. 1–2 sentences. Who is this person right now? What phase of life are they in? What does a gift need to do for them emotionally? Write warmly, as if describing someone you know well.",
   "confidence_overall": "high | medium | low",
   "confidence_reason": "string — short note on signal quality"
 }

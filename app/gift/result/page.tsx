@@ -27,11 +27,7 @@ export default function ResultPage() {
   if (result.confidence_overall === 'high') confidenceText = 'Strong signal';
   if (result.confidence_overall === 'low') confidenceText = 'Some gaps';
 
-  // Normalize portrait text case
-  let portraitText = result.portrait;
-  if (!portraitText.toLowerCase().startsWith('we think')) {
-    portraitText = `We think ${portraitText.charAt(0).toLowerCase() + portraitText.slice(1)}`;
-  }
+  const portraitText = result.portrait;
 
   return (
     <div className="animate-fade-in pb-16">

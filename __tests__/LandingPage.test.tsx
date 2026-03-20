@@ -9,9 +9,9 @@ describe('Landing Page', () => {
     expect(screen.getByText(/in your head\./)).toBeInTheDocument();
   });
 
-  test('renders subline about directions', () => {
+  test('renders subline about specific gift ideas', () => {
     render(<Home />);
-    expect(screen.getByText(/directions — not a product list/)).toBeInTheDocument();
+    expect(screen.getByText(/specific gift ideas/)).toBeInTheDocument();
   });
 
   test('renders CTA link to /gift/start', () => {

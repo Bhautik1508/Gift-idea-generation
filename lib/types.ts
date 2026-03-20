@@ -112,10 +112,4 @@ export const BUDGETS = [
   'Above ₹15k',
 ] as const;
 
-export const SOCIAL_VISIBILITY = [
-  'Just them (private)',
-  'Close family',
-  'Extended family / community',
-  'Colleagues',
-  'Public occasion (wedding etc.)',
-] as const;
+

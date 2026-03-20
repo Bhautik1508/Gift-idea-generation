@@ -42,8 +42,8 @@ export default function Home() {
         {/* Subline */}
         <p className="text-lg md:text-xl text-muted max-w-lg mx-auto mb-10 leading-relaxed">
           Tell us about the person. We&apos;ll give you{' '}
-          <span className="text-foreground font-medium">directions — not a product list</span>{' '}
-          — and the confidence to buy.
+          <span className="text-foreground font-medium">specific gift ideas — and the reasons they fit.</span>{' '}
+          Confidence, not guesswork.
         </p>
 
         {/* CTA */}
