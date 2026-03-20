@@ -6,6 +6,7 @@ import { useGift } from '@/lib/GiftContext';
 import JSZip from 'jszip';
 import type { ChatSignals } from '@/lib/types';
 import { parseWhatsAppChat, extractSenders } from '@/lib/chatParser';
+import ProgressBar from '@/components/ProgressBar';
 
 const ACCEPTED_EXTENSIONS = ['.txt', '.zip'];
 
@@ -131,11 +132,12 @@ export default function UploadPage() {
   return (
     <div className="animate-fade-in max-w-2xl mx-auto">
       <div className="mb-10">
-        <h1 className="text-3xl font-semibold mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
-          WhatsApp Signals
+        <ProgressBar currentStep={3} totalSteps={3} />
+        <h1 className="text-3xl font-semibold mt-6 mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
+          Deeper Signals (Optional)
         </h1>
         <p className="text-muted">
-          Optional — upload a WhatsApp chat export with this person for deeper, more personal recommendations.
+          Upload a WhatsApp chat export with this person for deeper, more personal recommendations.
         </p>
         <p className="text-xs text-muted/60 mt-2">
           Your chat is never stored. It&apos;s processed once and discarded.

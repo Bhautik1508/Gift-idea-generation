@@ -40,7 +40,7 @@ export default function StartPage() {
   return (
     <div className="animate-fade-in">
       <div className="mb-10">
-        <ProgressBar currentStep={1} totalSteps={2} />
+        <ProgressBar currentStep={1} totalSteps={3} />
         <h1 className="text-3xl font-semibold mt-6 mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
           The Basics
         </h1>

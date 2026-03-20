@@ -3,8 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { CHAT_SIGNAL_PROMPT } from '@/lib/prompts/chatSignalExtraction';
 import {
   parseWhatsAppChat,
-  filterByRecipient,
-  truncateToTokenBudget,
+  formatBothSides,
 } from '@/lib/chatParser';
 
 export const runtime = 'nodejs';
@@ -39,18 +38,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Filter to recipient's messages
-    const recipientMessages = filterByRecipient(allMessages, recipientName);
-
-    if (recipientMessages.length === 0) {
-      return NextResponse.json(
-        { error: `Could not find messages from "${recipientName}". Please check the name and try again.` },
-        { status: 400 }
-      );
-    }
-
-    // 3. Truncate to token budget
-    const anonymizedText = truncateToTokenBudget(recipientMessages, 5000);
+    // 2. Format both sides to token budget (anonymized)
+    const anonymizedText = formatBothSides(allMessages, recipientName, 5000);
 
     // 4. Call Gemini for signal extraction
     const genAI = new GoogleGenerativeAI(apiKey);

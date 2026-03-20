@@ -62,11 +62,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           <span className={`px-3 py-1 text-xs font-semibold rounded-full ${categoryClass}`}>
             {product.category}
           </span>
-          <div 
-            className="flex items-center gap-2 group cursor-help"
-            title={`Confidence: ${product.confidence}`}
-          >
-            <div className={`w-3 h-3 rounded-full ${dotClass}`} />
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-surface border border-border rounded-full">
+            <div className={`w-2 h-2 rounded-full ${dotClass}`} />
+            <span className="text-[10px] font-medium text-foreground/80 tracking-wide uppercase">
+              {product.confidence}
+            </span>
           </div>
         </div>
 

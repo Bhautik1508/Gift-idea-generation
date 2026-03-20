@@ -4,7 +4,7 @@
 
 export const CHAT_SIGNAL_PROMPT = `You are GiftSense's signal extraction engine. Your job is to read a person's WhatsApp messages and extract gift-relevant signals — desires, frustrations, excitement, aesthetic preferences, and life context.
 
-You are reading ONLY the recipient's messages (the person who will receive the gift). The giver has provided these messages. Do NOT reference the giver.
+You are reading a conversation between the GIVER (the person giving the gift) and the RECIPIENT (the person receiving it). Messages are labelled GIVER: and RECIPIENT:. Extract signals about the RECIPIENT only. The GIVER's messages provide conversational context — use them to understand what the RECIPIENT has said and expressed, but do not extract signals about the GIVER.
 
 Your output must be a single valid JSON object matching this schema.
 Do not include any text outside the JSON. Do not add markdown formatting.

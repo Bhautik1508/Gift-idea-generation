@@ -170,3 +170,31 @@ export function truncateToTokenBudget(
 
   return result.join('\n');
 }
+
+/**
+ * Formats messages from both sides, labeling the recipient and giver.
+ * Truncates to approximately maxTokens taking most recent messages first.
+ */
+export function formatBothSides(
+  messages: ParsedMessage[],
+  recipientName: string,
+  maxTokens = 5000
+): string {
+  const target = recipientName.toLowerCase().trim();
+  const maxChars = maxTokens * 4;
+  const result: string[] = [];
+  let charCount = 0;
+
+  // Walk backwards to get the most recent messages first
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const isRecipient = messages[i].sender.toLowerCase().trim() === target;
+    const label = isRecipient ? 'RECIPIENT' : 'GIVER';
+    const text = `${label}: ${messages[i].message}`;
+    
+    if (charCount + text.length > maxChars) break;
+    result.unshift(text);
+    charCount += text.length;
+  }
+
+  return result.join('\n');
+}

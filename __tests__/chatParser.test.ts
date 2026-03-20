@@ -1,8 +1,8 @@
 import {
   parseWhatsAppChat,
-  filterByRecipient,
   extractSenders,
   truncateToTokenBudget,
+  formatBothSides,
 } from '@/lib/chatParser';
 
 // ─── Sample WhatsApp chat text ─────────────────────────────
@@ -87,26 +87,22 @@ describe('parseWhatsAppChat', () => {
   });
 });
 
-describe('filterByRecipient', () => {
-  test('filters to only the named recipient', () => {
+describe('formatBothSides', () => {
+  test('formats messages with GIVER and RECIPIENT labels', () => {
     const all = parseWhatsAppChat(SAMPLE_CHAT);
-    const priyaOnly = filterByRecipient(all, 'Priya');
-    expect(priyaOnly.length).toBe(5);
-    priyaOnly.forEach((m) => {
-      expect(m.sender).toBe('Priya');
-    });
+    const formatted = formatBothSides(all, 'Priya');
+    expect(formatted).toContain('RECIPIENT: Amazing! I made a little bowl');
+    expect(formatted).toContain('GIVER: How was it?');
+    // Rahul's messages will be labeled as GIVER since he is not 'Priya'
+    expect(formatted).toContain('GIVER: Are we meeting for dinner?');
   });
 
-  test('is case-insensitive', () => {
+  test('truncates to token budget taking most recent first', () => {
     const all = parseWhatsAppChat(SAMPLE_CHAT);
-    const priyaOnly = filterByRecipient(all, 'priya');
-    expect(priyaOnly.length).toBe(5);
-  });
-
-  test('returns empty for unknown name', () => {
-    const all = parseWhatsAppChat(SAMPLE_CHAT);
-    const nobody = filterByRecipient(all, 'Nonexistent');
-    expect(nobody).toEqual([]);
+    // Very tight budget: ~4 tokens = ~16 chars — should get only the last message
+    const formatted = formatBothSides(all, 'Priya', 4);
+    expect(formatted).toContain('Sure');
+    expect(formatted).not.toContain('pottery class');
   });
 });
 

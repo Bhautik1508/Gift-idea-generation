@@ -24,7 +24,7 @@ describe('StartPage', () => {
       </GiftProvider>,
     );
     expect(screen.getByText('The Basics')).toBeInTheDocument();
-    expect(screen.getByText('Step 1 of 2')).toBeInTheDocument();
+    expect(screen.getByText('Step 1 of 3')).toBeInTheDocument();
   });
 
   test('next button is disabled initially', () => {

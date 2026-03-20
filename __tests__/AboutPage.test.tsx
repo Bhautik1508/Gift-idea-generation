@@ -24,7 +24,7 @@ describe('AboutPage', () => {
       </GiftProvider>,
     );
     expect(screen.getByText('The Person')).toBeInTheDocument();
-    expect(screen.getByText('Step 2 of 2')).toBeInTheDocument();
+    expect(screen.getByText('Step 2 of 3')).toBeInTheDocument();
   });
 
   test('submitting form goes to upload page', () => {

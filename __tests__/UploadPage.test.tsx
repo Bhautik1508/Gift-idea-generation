@@ -22,7 +22,7 @@ describe('UploadPage', () => {
         <UploadPage />
       </GiftProvider>
     );
-    expect(screen.getByText('WhatsApp Signals')).toBeInTheDocument();
+    expect(screen.getByText('Deeper Signals (Optional)')).toBeInTheDocument();
   });
 
   test('shows dropzone area', () => {

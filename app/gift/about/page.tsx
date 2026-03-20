@@ -64,7 +64,7 @@ export default function AboutPage() {
   return (
     <div className="animate-fade-in">
       <div className="mb-10">
-        <ProgressBar currentStep={2} totalSteps={2} />
+        <ProgressBar currentStep={2} totalSteps={3} />
         <h1 className="text-3xl font-semibold mt-6 mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
           The Person
         </h1>
@@ -141,6 +141,23 @@ export default function AboutPage() {
             ))}
           </div>
         </QuestionCard>
+
+        {/* Signal Quality Callout */}
+        <div className="bg-accent/5 border border-accent/20 rounded-xl p-4 flex gap-3 items-start">
+          <div className="text-accent mt-0.5">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-foreground mb-1">
+              The more you share below, the more specific the recommendations.
+            </p>
+            <p className="text-sm text-muted">
+              Even one sentence changes everything.
+            </p>
+          </div>
+        </div>
 
         {/* Q9: Life changes */}
         <QuestionCard label="What has changed in their life recently? (Optional)">
