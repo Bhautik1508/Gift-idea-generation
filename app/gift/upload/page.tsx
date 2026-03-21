@@ -40,7 +40,9 @@ export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [recipientName, setRecipientName] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [howToOpen, setHowToOpen] = useState(false);
+  const [howToTab, setHowToTab] = useState<'ios'|'android'>('ios');
   const [signals, setSignals] = useState<ChatSignals | null>(null);
   const [detectedSenders, setDetectedSenders] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -146,6 +148,58 @@ export default function UploadPage() {
         <p className="text-xs text-muted/60 mt-2">
           Your chat is never stored. It&apos;s processed once and discarded.
         </p>
+      </div>
+
+      {/* Instruction block */}
+      <div className="text-center mb-8 max-w-lg mx-auto">
+        <h2 className="text-3xl font-semibold mb-3 tracking-tight text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>Upload chat history</h2>
+        <p className="text-muted text-sm sm:text-base mb-6 leading-relaxed">
+          Export a WhatsApp chat (Without Media) and drop the <code className="bg-muted/10 px-1.5 py-0.5 rounded text-xs">.txt</code> file here. We'll analyze it to find the perfect gift. 
+        </p>
+
+        <button 
+          onClick={() => setHowToOpen(!howToOpen)}
+          className="text-sm font-medium text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
+        >
+          How to get the file {howToOpen ? '↑' : '↓'}
+        </button>
+
+        {howToOpen && (
+          <div className="mt-4 p-5 bg-surface border border-border rounded-xl text-left shadow-sm animate-fade-in text-sm text-foreground/80 max-w-sm mx-auto">
+            <div className="flex gap-2 mb-4">
+              <button 
+                onClick={() => setHowToTab('ios')}
+                className={`flex-1 py-1.5 rounded-full text-xs font-semibold transition-colors ${howToTab === 'ios' ? 'bg-foreground text-surface' : 'bg-muted/10 text-muted hover:bg-muted/20'}`}
+              >
+                iPhone
+              </button>
+              <button 
+                onClick={() => setHowToTab('android')}
+                className={`flex-1 py-1.5 rounded-full text-xs font-semibold transition-colors ${howToTab === 'android' ? 'bg-foreground text-surface' : 'bg-muted/10 text-muted hover:bg-muted/20'}`}
+              >
+                Android
+              </button>
+            </div>
+
+            {howToTab === 'ios' ? (
+              <ol className="list-decimal list-inside space-y-2 ml-1">
+                <li>Open WhatsApp and go to the chat</li>
+                <li>Tap the person's name at the top</li>
+                <li>Scroll down and tap <strong>Export Chat</strong></li>
+                <li>Choose <strong>Without Media</strong></li>
+                <li>Share the .txt file to this page</li>
+              </ol>
+            ) : (
+              <ol className="list-decimal list-inside space-y-2 ml-1">
+                <li>Open WhatsApp and go to the chat</li>
+                <li>Tap the three dots (⋮) in the top right</li>
+                <li>Tap <strong>More → Export chat</strong></li>
+                <li>Choose <strong>Without Media</strong></li>
+                <li>Share the .txt file to this page</li>
+              </ol>
+            )}
+          </div>
+        )}
       </div>
 
       {!signals ? (

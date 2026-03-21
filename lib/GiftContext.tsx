@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import type { GiftFormData, GiftOutput, ChatSignals } from './types';
+import type { GiftFormData, GiftOutput, ChatSignals, GiftRecommendation } from './types';
 
 // ─── Default state ──────────────────────────────────────────
 
@@ -19,6 +19,7 @@ const DEFAULT_FORM_DATA: GiftFormData = {
   pastGiftResponse: [],
   lifestyle: '',
   lifeStage: '',
+  giftIntent: '',
   selectedTerritoryTitle: '',
 };
 
@@ -34,6 +35,7 @@ interface GiftContextType {
   setResult: (output: GiftOutput) => void;
   setIsLoading: (loading: boolean) => void;
   resetAll: () => void;
+  replaceRecommendation: (index: number, newRec: GiftRecommendation) => void;
 }
 
 const GiftContext = createContext<GiftContextType | undefined>(undefined);
@@ -99,6 +101,17 @@ export function GiftProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const replaceRecommendation = (index: number, newRec: GiftRecommendation) => {
+    setResult((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev };
+      updated.recommendations = [...prev.recommendations];
+      updated.recommendations[index] = newRec;
+      sessionStorage.setItem('giftsense_result', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   return (
     <GiftContext.Provider
       value={{
@@ -110,6 +123,7 @@ export function GiftProvider({ children }: { children: React.ReactNode }) {
         setResult,
         setIsLoading,
         resetAll,
+        replaceRecommendation,
       }}
     >
       {children}

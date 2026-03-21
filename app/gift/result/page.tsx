@@ -9,11 +9,10 @@ const CONFIDENCE_ORDER = { high: 0, medium: 1, low: 2 } as const;
 
 export default function ResultPage() {
   const router = useRouter();
-  const { result, resetAll } = useGift();
+  const { result, resetAll, formData, replaceRecommendation } = useGift();
   const [portraitExpanded, setPortraitExpanded] = useState(false);
   const [showLowConfidence, setShowLowConfidence] = useState(false);
   const [copied, setCopied] = useState(false);
-  const { formData } = useGift();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -54,8 +53,34 @@ export default function ResultPage() {
   };
 
   const handleFeedback = () => {
-    // Save to localstorage for deferred prompt if we wanted, or just go to feedback now
     router.push('/gift/feedback');
+  };
+
+  const handleReject = async (productName: string, reason: string) => {
+    if (!result || !result.recommendations) return;
+    
+    try {
+      const res = await fetch('/api/regenerate-card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          formData,
+          rejectedProduct: productName,
+          rejectionReason: reason
+        }),
+      });
+      
+      if (!res.ok) throw new Error('API failed');
+      const data = await res.json();
+      
+      const idx = result.recommendations.findIndex(r => r.product_name === productName);
+      if (idx !== -1) {
+        replaceRecommendation(idx, data);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to find a replacement. Please try again.');
+    }
   };
 
   const portraitText = result.portrait;
@@ -117,11 +142,11 @@ export default function ResultPage() {
       </div>
 
       {/* Product Grid — sorted high > medium */}
-      <div className="gap-6 max-w-5xl mx-auto" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
-        {mainCards.map((rec, idx) => (
-          <ProductCard key={idx} product={rec} />
-        ))}
-      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {mainCards.map((product, idx) => (
+            <ProductCard key={`${product.product_name}-${idx}`} product={product} onReject={handleReject} />
+          ))}
+        </div>
 
       {/* QUALITY 6: Collapsible "Also considered" for low-confidence */}
       {lowCards.length > 0 && (
@@ -134,9 +159,9 @@ export default function ResultPage() {
             <span>Also considered ({lowCards.length})</span>
           </button>
           {showLowConfidence && (
-            <div className="gap-6 mt-6 animate-fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
-              {lowCards.map((rec, idx) => (
-                <ProductCard key={`low-${idx}`} product={rec} />
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 opacity-70 hover:opacity-100 transition-opacity">
+              {lowCards.map((product, idx) => (
+                <ProductCard key={`${product.product_name}-low-${idx}`} product={product} onReject={handleReject} />
               ))}
             </div>
           )}

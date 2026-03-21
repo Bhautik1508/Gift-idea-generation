@@ -114,6 +114,12 @@ Adjust personalisation depth and risk level per relationship:
 - Tier 2 (Thoughtful-safe): Parent, Child, In-law — thoughtful and warm, but avoid anything too risky or niche; quality-over-quirkiness.
 - Tier 3 (Safe-professional): Colleague, Distant relative, Other — universally appealing, premium but neutral; experiences over personal items.
 
+GIVER INTENT:
+If giftIntent is specified, let it shape the emotional register of ALL recommendations:
+- 'I really know you': maximise personalisation, reference specific signals, avoid anything generic
+- 'You deserve this': skew toward indulgent, premium, self-care, things they'd not justify for themselves
+- 'This moment deserves to be remembered': skew toward experiential, keepsakes, things that mark a transition or milestone
+
 AESTHETIC AND HISTORY SIGNALS:
 - If aesthetic_signals are provided from chat analysis, use them to filter style — e.g. if the recipient's aesthetic is 'minimalist', avoid ornate or maximalist gifts.
 - If gift_history_hints are provided, avoid repeating past gift categories. Use them to identify gaps — if they've received kitchen items before, explore a different territory.`;
@@ -139,6 +145,7 @@ export function buildUserPrompt(data: GiftFormData): string {
     `- Responds well to: ${data.pastGiftResponse.join(', ') || 'Not mentioned'}`,
     `- Lifestyle: ${data.lifestyle || 'Not mentioned'}`,
     `- Life stage right now: ${data.lifeStage || 'Not mentioned'}`,
+    `- Giver's intent: ${data.giftIntent || 'Not specified'}`,
     `- City (for local experiences): ${data.recipientCity || 'Not specified'}`,
   ];
 

@@ -14,6 +14,7 @@ export interface GiftFormData {
   pastGiftResponse: string[];
   lifestyle: string;
   lifeStage: string;
+  giftIntent?: string;
   chatSignals?: ChatSignals;
   instagramSignals?: InstagramSignals;
   selectedTerritoryTitle?: string;

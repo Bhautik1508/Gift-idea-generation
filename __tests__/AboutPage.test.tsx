@@ -41,7 +41,7 @@ describe('AboutPage', () => {
     const nextButton = screen.getByRole('button', { name: /Read the signals/i });
     expect(nextButton).not.toBeDisabled();
     fireEvent.click(nextButton);
-    expect(mockPush).toHaveBeenCalledWith('/gift/upload');
+    expect(mockPush).toHaveBeenCalledWith('/gift/intent');
   });
 
   test('back button calls router.back()', () => {

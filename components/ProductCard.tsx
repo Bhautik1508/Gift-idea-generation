@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { GiftRecommendation } from '@/lib/types';
 
 interface ProductCardProps {
   product: GiftRecommendation;
+  onReject?: (name: string, reason: string) => Promise<void>;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, onReject }: ProductCardProps) {
+  const [showRejectOptions, setShowRejectOptions] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+
   // Confidence dot color
   let dotClass = '';
   switch (product.confidence) {
@@ -40,22 +44,39 @@ export default function ProductCard({ product }: ProductCardProps) {
   }
 
   // Occasion fit badge
-  let occasionClass = '';
-  switch (product.occasion_fit) {
-    case 'strong':
-      occasionClass = 'bg-green-50 text-success border border-success/20';
-      break;
-    case 'good':
-      occasionClass = 'bg-amber-50 text-amber-600 border border-amber-500/20';
-      break;
-    case 'works':
-    default:
-      occasionClass = 'bg-gray-50 text-gray-500 border border-gray-200';
-      break;
+  const occasionClass =
+    product.occasion_fit === 'strong' ? 'bg-green-50 text-success border border-success/20' :
+    product.occasion_fit === 'good' ? 'bg-blue-50 text-blue-600 border border-blue-200' :
+    'bg-gray-50 text-muted border border-border';
+
+  const handleReject = async (reason: string) => {
+    if (!onReject) return;
+    setIsRegenerating(true);
+    try {
+      await onReject(product.product_name, reason);
+    } finally {
+      setIsRegenerating(false);
+      setShowRejectOptions(false);
+    }
+  };
+
+  if (isRegenerating) {
+    return (
+      <div className="flex flex-col h-full bg-surface border border-border rounded-2xl overflow-hidden hover:shadow-md transition-shadow duration-300 relative group animate-pulse p-6">
+        <div className="h-4 bg-border/50 rounded w-1/3 mb-4 mt-2"></div>
+        <div className="h-6 bg-border/50 rounded w-3/4 mb-2"></div>
+        <div className="h-3 bg-border/30 rounded w-full mb-8"></div>
+        <div className="h-20 bg-border/30 rounded-xl w-full mb-4"></div>
+        <div className="h-10 bg-border/20 rounded-lg w-full mt-auto"></div>
+        <div className="absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-[1px]">
+          <span className="text-sm font-medium text-foreground tracking-wide">Rethinking...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col rounded-2xl border border-border bg-surface shadow-sm overflow-hidden hover:shadow-md transition-shadow relative">
+    <div className="flex flex-col h-full bg-surface border border-border rounded-2xl overflow-hidden hover:shadow-md transition-shadow duration-300 relative group">
       <div className="p-6 flex-grow flex flex-col">
         {/* Top bar: Category + Confidence */}
         <div className="flex justify-between items-start mb-4">
@@ -122,18 +143,51 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
       </div>
 
-      {/* Footer CTA Strip */}
-      <div className="border-t border-border bg-gray-50/50 p-4 shrink-0">
-        <a
-          href={`https://www.google.com/search?q=${encodeURIComponent(product.search_keywords)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-border rounded-lg text-sm font-medium text-foreground hover:border-accent hover:text-accent hover:shadow-sm transition-all group"
-        >
-          <span>Find this</span>
-          <span className="opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-        </a>
+      {/* Action Strip */}
+      <div className="border-t border-border bg-gray-50/50 p-4 shrink-0 flex items-center justify-center">
+        {!showRejectOptions ? (
+          <a
+            href={`https://www.google.com/search?q=${encodeURIComponent(product.search_keywords)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-border rounded-lg text-sm font-medium text-foreground hover:border-accent hover:text-accent hover:shadow-sm transition-all group/btn"
+          >
+            <span>Find this</span>
+            <span className="opacity-50 group-hover/btn:opacity-100 group-hover/btn:translate-x-1 transition-all">→</span>
+          </a>
+        ) : (
+          <div className="w-full animate-fade-in">
+            <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Why not?</p>
+            <div className="flex flex-wrap gap-2">
+              {['Too expensive', 'Too personal', 'Not their style', 'They might have this'].map(r => (
+                <button
+                  key={r}
+                  onClick={() => handleReject(r)}
+                  className="px-3 py-1.5 text-xs bg-white border border-border rounded-md hover:border-accent hover:text-accent transition-colors"
+                >
+                  {r}
+                </button>
+              ))}
+              <button
+                onClick={() => setShowRejectOptions(false)}
+                className="px-3 py-1.5 text-xs text-muted hover:text-foreground underline underline-offset-2 ml-auto"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Rejection trigger */}
+      {onReject && !showRejectOptions && (
+        <button
+          onClick={() => setShowRejectOptions(true)}
+          className="w-full text-xs text-muted hover:text-foreground transition-colors py-2 border-t border-border bg-surface"
+        >
+          Not quite
+        </button>
+      )}
     </div>
   );
 }
