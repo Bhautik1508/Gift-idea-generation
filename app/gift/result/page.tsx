@@ -12,6 +12,8 @@ export default function ResultPage() {
   const { result, resetAll } = useGift();
   const [portraitExpanded, setPortraitExpanded] = useState(false);
   const [showLowConfidence, setShowLowConfidence] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const { formData } = useGift();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -36,6 +38,24 @@ export default function ResultPage() {
   const handleStartOver = () => {
     resetAll();
     router.push('/');
+  };
+
+  const handleCopy = () => {
+    if (!result) return;
+    const items = result.recommendations.map((r, i) => 
+      `${i + 1}. ${r.product_name} (${r.price_range})\n   "${r.tagline}"\n   Why it fits: ${r.why_it_fits}\n   Search for: ${r.search_keywords}`
+    ).join('\n\n');
+    
+    const text = `Gift Ideas for my ${formData.relationship}:\n\n${items}`;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const handleFeedback = () => {
+    // Save to localstorage for deferred prompt if we wanted, or just go to feedback now
+    router.push('/gift/feedback');
   };
 
   let confidenceText = 'Good signal';
@@ -125,18 +145,35 @@ export default function ResultPage() {
         </div>
       )}
 
+      {/* Action Strip */}
       <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-16 pb-8">
         <button
+          onClick={handleCopy}
+          className="h-12 px-8 rounded-full bg-accent text-white font-medium hover:bg-accent-hover transition-all shadow-md w-full sm:w-auto"
+        >
+          {copied ? 'Copied to clipboard! ✓' : 'Copy all ideas'}
+        </button>
+        <button
           onClick={() => router.push('/gift/about')}
-          className="h-12 px-8 rounded-full border border-border bg-surface text-foreground font-medium hover:border-accent/50 hover:bg-accent/5 transition-all shadow-sm"
+          className="h-12 px-8 rounded-full border border-border bg-surface text-foreground font-medium hover:border-accent/50 hover:bg-accent/5 transition-all shadow-sm w-full sm:w-auto"
         >
           Refine for same person
         </button>
+      </div>
+
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-6 mt-4 pb-16">
         <button
           onClick={handleStartOver}
-          className="text-sm font-medium text-muted hover:text-foreground transition-colors underline underline-offset-4 sm:ml-2"
+          className="text-sm font-medium text-muted hover:text-foreground transition-colors underline underline-offset-4"
         >
           Start over for someone else
+        </button>
+        <div className="hidden sm:block w-1 h-1 rounded-full bg-border" />
+        <button
+          onClick={handleFeedback}
+          className="text-sm font-medium text-muted hover:text-foreground transition-colors underline underline-offset-4"
+        >
+          Tell us how these landed
         </button>
       </div>
     </div>

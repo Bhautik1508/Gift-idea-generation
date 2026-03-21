@@ -4,13 +4,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGift } from '@/lib/GiftContext';
 
-const LOADING_MESSAGES = [
-  "Reading the signals...",
-  "Thinking about who they are right now...",
-  "Finding what would actually resonate...",
-  "Almost there...",
-];
-
 export default function ThinkingPage() {
   const router = useRouter();
   const { formData, setResult, isLoading, setIsLoading } = useGift();
@@ -22,13 +15,25 @@ export default function ThinkingPage() {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
+  const loadingMessages = React.useMemo(() => {
+    const rel = formData.relationship?.toLowerCase() || 'person';
+    const occ = formData.occasion?.toLowerCase() || 'occasion';
+    return [
+      "Reading the signals...",
+      `Thinking about what a ${rel} really values...`,
+      `Finding something special for this ${occ}...`,
+      "Filtering out the generic stuff...",
+      "Almost there...",
+    ];
+  }, [formData.relationship, formData.occasion]);
+
   // Cycle loading messages
   useEffect(() => {
     const interval = setInterval(() => {
-      setMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
-    }, 2500);
+      setMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+    }, 2800);
     return () => clearInterval(interval);
-  }, []);
+  }, [loadingMessages.length]);
 
   // Fetch from API
   useEffect(() => {
@@ -115,7 +120,7 @@ export default function ThinkingPage() {
       </div>
 
       <div className="h-16 relative w-full overflow-hidden">
-        {LOADING_MESSAGES.map((msg, idx) => (
+        {loadingMessages.map((msg, idx) => (
           <h2
             key={idx}
             className={`absolute inset-0 text-2xl md:text-3xl italic text-foreground/80 font-medium tracking-wide transition-all duration-700 ${

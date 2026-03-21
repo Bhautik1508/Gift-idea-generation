@@ -91,7 +91,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Why it fits */}
-        <div className="bg-black/5 rounded-xl p-4 mb-5 flex-grow">
+        <div className="bg-surface border border-border rounded-xl p-4 mb-5 flex-grow shadow-sm">
           <h4 className="text-[10px] uppercase font-bold tracking-wider text-muted mb-2">
             Why this fits
           </h4>
