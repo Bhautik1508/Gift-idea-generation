@@ -48,8 +48,9 @@ export async function POST(req: Request) {
     });
 
     let text = result.response.text();
-    let parsed;
+    text = text.replace(/^```(json)?/, '').replace(/```$/, '').trim();
     
+    let parsed;
     try {
       parsed = JSON.parse(text);
     } catch {
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
       const retryResult = await model.generateContent({
         contents: [
           { role: 'user', parts: [{ text: userPrompt }] },
-          { role: 'model', parts: [{ text: text }] },
+          { role: 'model', parts: [{ text: result.response.text() }] },
           { role: 'user', parts: [{ text: 'Your previous response was not valid JSON. Return only the raw JSON object with no extra text, markdown, or code blocks.' }] },
         ],
         systemInstruction: SYSTEM_PROMPT,
@@ -67,6 +68,7 @@ export async function POST(req: Request) {
         },
       });
       text = retryResult.response.text();
+      text = text.replace(/^```(json)?/, '').replace(/```$/, '').trim();
       parsed = JSON.parse(text); // If this fails, let it throw to the outer catch
     }
 
@@ -79,7 +81,7 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error('API Error:', error);
     return NextResponse.json(
-      { error: 'Failed to generate recommendations. Please try again.' },
+      { error: 'Failed to generate recommendations. Details: ' + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
     );
   }
