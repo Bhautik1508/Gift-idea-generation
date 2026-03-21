@@ -64,8 +64,8 @@ export default function ResultPage() {
   const sorted = [...(result.recommendations || [])].sort((a, b) => {
     // 1. Move items matching the territory name / theme to the top implicitly
     const territoryWords = formData.selectedTerritoryTitle?.toLowerCase().split(' ') || [];
-    const aMatch = territoryWords.some(w => w.length > 3 && a.relevance_signal.toLowerCase().includes(w)) ? 1 : 0;
-    const bMatch = territoryWords.some(w => w.length > 3 && b.relevance_signal.toLowerCase().includes(w)) ? 1 : 0;
+    const aMatch = territoryWords.some(w => w.length > 3 && (a.relevance_signal || '').toLowerCase().includes(w)) ? 1 : 0;
+    const bMatch = territoryWords.some(w => w.length > 3 && (b.relevance_signal || '').toLowerCase().includes(w)) ? 1 : 0;
     
     if (aMatch !== bMatch) return bMatch - aMatch;
     
