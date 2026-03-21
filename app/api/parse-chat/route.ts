@@ -44,19 +44,30 @@ export async function POST(req: Request) {
     // 4. Call Gemini for signal extraction
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // Helper to fall back to older model if 2.5-flash hits quota
+    // Helper to cascade through available models if quota is hit
     const generateWithFallback = async (options: any) => {
-      try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-        return await model.generateContent(options);
-      } catch (e: any) {
-        if (e.status === 429 || e.message?.includes('429') || e.message?.includes('Quota') || e.message?.includes('limit')) {
-          console.warn('Quota exceeded for gemini-2.5-flash. Falling back to gemini-2.0-flash.');
-          const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-          return await fallbackModel.generateContent(options);
+      const modelsToTry = [
+        'gemini-2.5-flash',
+        'gemini-2.5-flash-lite',
+        'gemini-flash-latest',
+        'gemini-pro-latest'
+      ];
+      let lastError;
+      
+      for (const modelName of modelsToTry) {
+        try {
+          const model = genAI.getGenerativeModel({ model: modelName });
+          return await model.generateContent(options);
+        } catch (e: any) {
+          lastError = e;
+          if (e.status === 429 || e.message?.includes('429') || e.message?.includes('Quota') || e.message?.includes('limit')) {
+            console.warn(`Quota exceeded for ${modelName}. Trying next model...`);
+            continue;
+          }
+          throw e; // throw immediately if it's not a quota error
         }
-        throw e;
       }
+      throw lastError; // if all fail
     };
 
     const result = await generateWithFallback({
