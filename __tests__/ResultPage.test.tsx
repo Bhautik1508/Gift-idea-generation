@@ -22,11 +22,13 @@ const mockResult: GiftOutput = {
       occasion_fit: 'strong',
       confidence: 'high',
       search_keywords: 'pottery class near me',
-      relevance_signal: 'loves making things'
+      relevance_signal: 'loves making things',
+      social_note: 'Great for a friend',
     }
   ],
   confidence_overall: 'high',
-  confidence_reason: 'Reason test'
+  confidence_reason: 'Testing signal is strong',
+  territories: [],
 };
 
 // Component to inject result state for testing
@@ -70,7 +72,7 @@ describe('ResultPage', () => {
     
     // Check Portrait Banner
     expect(screen.getByText(/"We think they are a creative soul\."/)).toBeInTheDocument();
-    expect(screen.getByText(/STRONG SIGNAL/i)).toBeInTheDocument();
+    expect(screen.getByText(/Testing signal is strong/i)).toBeInTheDocument();
 
     // Check Product Card
     expect(screen.getByText('Pottery Class')).toBeInTheDocument();

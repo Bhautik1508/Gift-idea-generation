@@ -19,6 +19,7 @@ const DEFAULT_FORM_DATA: GiftFormData = {
   pastGiftResponse: [],
   lifestyle: '',
   lifeStage: '',
+  selectedTerritoryTitle: '',
 };
 
 // ─── Context shape ──────────────────────────────────────────

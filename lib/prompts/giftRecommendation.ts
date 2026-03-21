@@ -14,7 +14,19 @@ Do not include any text outside the JSON. Do not add markdown formatting.
 Do not wrap in code blocks.
 
 OUTPUT SCHEMA:
+Return a single valid JSON object matching this schema exactly. Do not output markdown code blocks.
 {
+  "portrait": "string (3-4 sentences summarizing who this person is right now, starting with 'We think ')",
+  "gift_intention": "string — one sentence starting with a verb. What should the gift accomplish emotionally? E.g. 'Give her permission to slow down and invest in herself.'",
+  "confidence_overall": "high | medium | low",
+  "confidence_reason": "string — 1-2 sentence honest explanation of why confidence is high/med/low",
+  "territories": [
+    {
+      "title": "string — 6–10 words, emotionally resonant. E.g. 'A gift for her creative, making side'",
+      "description": "string — 1–2 sentences. Why is this territory right for this person at this moment?",
+      "example_types": "string — 2–3 comma-separated examples of the KIND of gift, not specific products. E.g. 'workshop, craft kit, art supplies'"
+    }
+  ],
   "recommendations": [
     {
       "product_name": "string — a specific, concrete gift name (not a vague category, e.g. 'Pottery workshop experience' not 'Classes')",
@@ -25,12 +37,6 @@ OUTPUT SCHEMA:
       "occasion_fit": "strong | good | works",
       "confidence": "high | medium | low",
       "search_keywords": "string — what someone would type to find this on Google/Amazon. If a city is provided, append the city name for local results (e.g. 'pottery class Mumbai').",
-      "relevance_signal": "string — max 10 words naming the specific input that drove this recommendation"
-    }
-  ],
-  "portrait": "string — Start with 'We think'. 1–2 sentences. Who is this person right now? What phase of life are they in? What does a gift need to do for them emotionally? Write warmly, as if describing someone you know well.",
-  "gift_intention": "string — 1 sentence. What emotional goal should this gift achieve? e.g. 'Make them feel seen during a stressful transition' or 'Celebrate their creative side'.",
-  "confidence_overall": "high | medium | low",
   "confidence_reason": "string — short note on signal quality"
 }
 

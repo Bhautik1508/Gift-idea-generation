@@ -16,6 +16,7 @@ export interface GiftFormData {
   lifeStage: string;
   chatSignals?: ChatSignals;
   instagramSignals?: InstagramSignals;
+  selectedTerritoryTitle?: string;
 }
 
 // ─── Signal Extraction (Phase 2+) ───────────────────────────
@@ -50,9 +51,17 @@ export interface GiftRecommendation {
   confidence: 'high' | 'medium' | 'low';
   search_keywords: string;
   relevance_signal: string;
+  social_note: string | null;
+}
+
+export interface GiftTerritory {
+  title: string;
+  description: string;
+  example_types: string;
 }
 
 export interface GiftOutput {
+  territories: GiftTerritory[];
   recommendations: GiftRecommendation[];
   portrait: string;
   gift_intention: string;

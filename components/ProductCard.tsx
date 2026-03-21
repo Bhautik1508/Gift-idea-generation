@@ -91,7 +91,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Why it fits */}
-        <div className="bg-surface border border-border rounded-xl p-4 mb-5 flex-grow shadow-sm">
+        <div className="bg-surface border border-border rounded-xl p-4 mb-3 shadow-sm">
           <h4 className="text-[10px] uppercase font-bold tracking-wider text-muted mb-2">
             Why this fits
           </h4>
@@ -99,6 +99,20 @@ export default function ProductCard({ product }: ProductCardProps) {
             {product.why_it_fits}
           </p>
         </div>
+
+        {/* Social Note */}
+        {product.social_note && (
+          <div className="bg-accent/5 border border-accent/10 rounded-xl p-4 mb-5 shadow-sm flex-grow">
+            <h4 className="text-[10px] uppercase font-bold tracking-wider text-accent/80 mb-2">
+              Social Context
+            </h4>
+            <p className="text-[13px] leading-relaxed text-foreground/80 italic">
+              {product.social_note}
+            </p>
+          </div>
+        )}
+
+        <div className={`${!product.social_note ? 'flex-grow' : ''}`} />
 
         {/* Occasion Badge */}
         <div className="mt-auto">

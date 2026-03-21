@@ -68,7 +68,7 @@ export default function ThinkingPage() {
         
         setResult(data);
         setIsLoading(false);
-        router.push('/gift/result');
+        router.push('/gift/portrait');
 
       } catch (err) {
         // console.error intentionally omitted to prevent Next.js dev overlay for expected errors

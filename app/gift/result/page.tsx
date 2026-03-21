@@ -58,16 +58,20 @@ export default function ResultPage() {
     router.push('/gift/feedback');
   };
 
-  let confidenceText = 'Good signal';
-  if (result.confidence_overall === 'high') confidenceText = 'Strong signal';
-  if (result.confidence_overall === 'low') confidenceText = 'Some gaps';
-
   const portraitText = result.portrait;
 
-  // QUALITY 6: Sort recommendations by confidence
-  const sorted = [...(result.recommendations || [])].sort(
-    (a, b) => CONFIDENCE_ORDER[a.confidence] - CONFIDENCE_ORDER[b.confidence]
-  );
+  // Sort recommendations based on selected territory + confidence
+  const sorted = [...(result.recommendations || [])].sort((a, b) => {
+    // 1. Move items matching the territory name / theme to the top implicitly
+    const territoryWords = formData.selectedTerritoryTitle?.toLowerCase().split(' ') || [];
+    const aMatch = territoryWords.some(w => w.length > 3 && a.relevance_signal.toLowerCase().includes(w)) ? 1 : 0;
+    const bMatch = territoryWords.some(w => w.length > 3 && b.relevance_signal.toLowerCase().includes(w)) ? 1 : 0;
+    
+    if (aMatch !== bMatch) return bMatch - aMatch;
+    
+    // 2. Sort by confidence
+    return CONFIDENCE_ORDER[a.confidence] - CONFIDENCE_ORDER[b.confidence];
+  });
   const mainCards = sorted.filter((r) => r.confidence !== 'low');
   const lowCards = sorted.filter((r) => r.confidence === 'low');
 
@@ -107,14 +111,8 @@ export default function ResultPage() {
           </div>
         )}
 
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-surface border border-border rounded-full shadow-sm">
-          <div className={`w-2 h-2 rounded-full ${
-            result.confidence_overall === 'high' ? 'bg-success' : 
-            result.confidence_overall === 'medium' ? 'bg-amber-400' : 'bg-gray-400'
-          }`} />
-          <span className="text-xs font-medium text-foreground/80 tracking-wide uppercase">
-            {confidenceText}
-          </span>
+        <div className="mt-2 text-center text-sm text-muted italic max-w-xl mx-auto px-4">
+          {result.confidence_reason}
         </div>
       </div>
 
