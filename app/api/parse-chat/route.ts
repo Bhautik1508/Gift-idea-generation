@@ -43,9 +43,23 @@ export async function POST(req: Request) {
 
     // 4. Call Gemini for signal extraction
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    
+    // Helper to fall back to older model if 2.5-flash hits quota
+    const generateWithFallback = async (options: any) => {
+      try {
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        return await model.generateContent(options);
+      } catch (e: any) {
+        if (e.status === 429 || e.message?.includes('429') || e.message?.includes('Quota') || e.message?.includes('limit')) {
+          console.warn('Quota exceeded for gemini-2.5-flash. Falling back to gemini-1.5-flash.');
+          const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+          return await fallbackModel.generateContent(options);
+        }
+        throw e;
+      }
+    };
 
-    const result = await model.generateContent({
+    const result = await generateWithFallback({
       contents: [
         {
           role: 'user',
