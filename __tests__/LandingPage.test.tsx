@@ -11,7 +11,7 @@ describe('Landing Page', () => {
 
   test('renders subline about specific gift ideas', () => {
     render(<Home />);
-    expect(screen.getByText(/specific gift ideas/)).toBeInTheDocument();
+    expect(screen.getAllByText(/specific gift ideas/)[0]).toBeInTheDocument();
   });
 
   test('renders CTA link to /gift/start', () => {
@@ -30,5 +30,12 @@ describe('Landing Page', () => {
     expect(screen.getByText('No sign-up required')).toBeInTheDocument();
     expect(screen.getByText('Specific, personalised ideas')).toBeInTheDocument();
     expect(screen.getByText('India-context aware')).toBeInTheDocument();
+  });
+
+  test('renders How it works section', () => {
+    render(<Home />);
+    expect(screen.getByText('Tell us about them')).toBeInTheDocument();
+    expect(screen.getByText('We build their picture')).toBeInTheDocument();
+    expect(screen.getByText('You choose with confidence')).toBeInTheDocument();
   });
 });

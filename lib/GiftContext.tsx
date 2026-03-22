@@ -8,7 +8,6 @@ import type { GiftFormData, GiftOutput, ChatSignals, GiftRecommendation } from '
 const DEFAULT_FORM_DATA: GiftFormData = {
   relationship: '',
   recipientAge: '',
-  recipientGender: '',
   occasion: '',
   budget: [],
   recipientCity: '',
@@ -17,7 +16,6 @@ const DEFAULT_FORM_DATA: GiftFormData = {
   wishedFor: '',
   personality: [],
   pastGiftResponse: [],
-  lifestyle: '',
   lifeStage: '',
   giftIntent: '',
   selectedTerritoryTitle: '',
@@ -32,6 +30,7 @@ interface GiftContextType {
 
   updateFormData: (updates: Partial<GiftFormData>) => void;
   setChatSignals: (signals: ChatSignals) => void;
+  clearChatSignals: () => void;
   setResult: (output: GiftOutput) => void;
   setIsLoading: (loading: boolean) => void;
   resetAll: () => void;
@@ -91,6 +90,13 @@ export function GiftProvider({ children }: { children: React.ReactNode }) {
     setFormData((prev) => ({ ...prev, chatSignals: signals }));
   }, []);
 
+  const clearChatSignals = useCallback(() => {
+    setFormData((prev) => {
+      const { chatSignals, ...rest } = prev;
+      return rest as GiftFormData;
+    });
+  }, []);
+
   const resetAll = useCallback(() => {
     setFormData(DEFAULT_FORM_DATA);
     setResult(null);
@@ -120,6 +126,7 @@ export function GiftProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         updateFormData,
         setChatSignals,
+        clearChatSignals,
         setResult,
         setIsLoading,
         resetAll,

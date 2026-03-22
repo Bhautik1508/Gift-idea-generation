@@ -29,15 +29,18 @@ Return a single valid JSON object matching this schema exactly. Do not output ma
   ],
   "recommendations": [
     {
-      "product_name": "string — a specific, concrete gift name (not a vague category, e.g. 'Pottery workshop experience' not 'Classes')",
+      "product_name": "string — specific, concrete gift name",
       "category": "Experience | Product | Consumable | Wildcard",
-      "tagline": "string — 6–10 words, emotionally resonant, starts with a verb",
-      "why_it_fits": "string — 1–2 sentences referencing their personality/life stage",
-      "price_range": "string — a specific rupee range within their budget",
+      "tagline": "string — 6–10 words, starts with a verb",
+      "why_it_fits": "string — 1–2 sentences with specific signals",
+      "price_range": "string — e.g. '₹2,000–3,500'",
       "occasion_fit": "strong | good | works",
       "confidence": "high | medium | low",
-      "search_keywords": "string — what someone would type to find this on Google/Amazon. If a city is provided, append the city name for local results (e.g. 'pottery class Mumbai').",
-  "confidence_reason": "string — short note on signal quality"
+      "search_keywords": "string — India-relevant search terms",
+      "relevance_signal": "string — max 10 words",
+      "social_note": "string | null — 1 sentence on social context"
+    }
+  ]
 }
 
 GUIDELINES:
@@ -71,7 +74,7 @@ or demographic fields dilute a clear, specific signal from these:
    to wishedFor. Treat expressed_desires as equivalent to interests.
 
 Low-weight fields (use for filtering and tone only, not as primary
-drivers): recipientAge, recipientGender, personality pills, lifestyle,
+drivers): recipientAge, personality pills,
 lifeStage, pastGiftResponse.
 
 RELEVANCE QUALITY BAR:
@@ -133,7 +136,6 @@ export function buildUserPrompt(data: GiftFormData): string {
     'OCCASION & RECIPIENT DETAILS:',
     `- Recipient relationship: ${data.relationship || 'Not specified'}`,
     `- Recipient age: ${data.recipientAge || 'Not specified'}`,
-    `- Recipient gender: ${data.recipientGender || 'Not specified'}`,
     `- Occasion: ${data.occasion || 'Not specified'}`,
     `- Budget range: ${data.budget.join(' or ') || 'Not specified'}`,
     '',
@@ -143,7 +145,6 @@ export function buildUserPrompt(data: GiftFormData): string {
     `- Something they've mentioned wanting: ${data.wishedFor || 'Not mentioned'}`,
     `- Personality traits: ${data.personality.join(', ') || 'Not mentioned'}`,
     `- Responds well to: ${data.pastGiftResponse.join(', ') || 'Not mentioned'}`,
-    `- Lifestyle: ${data.lifestyle || 'Not mentioned'}`,
     `- Life stage right now: ${data.lifeStage || 'Not mentioned'}`,
     `- Giver's intent: ${data.giftIntent || 'Not specified'}`,
     `- City (for local experiences): ${data.recipientCity || 'Not specified'}`,

@@ -24,7 +24,7 @@ describe('AboutPage', () => {
       </GiftProvider>,
     );
     expect(screen.getByText('The Person')).toBeInTheDocument();
-    expect(screen.getByText('Step 2 of 3')).toBeInTheDocument();
+    expect(screen.getByText('Step 2 of 4')).toBeInTheDocument();
   });
 
   test('submitting form goes to upload page', () => {
@@ -41,7 +41,7 @@ describe('AboutPage', () => {
     const nextButton = screen.getByRole('button', { name: /Read the signals/i });
     expect(nextButton).not.toBeDisabled();
     fireEvent.click(nextButton);
-    expect(mockPush).toHaveBeenCalledWith('/gift/intent');
+    expect(mockPush).toHaveBeenCalledWith('/gift/upload');
   });
 
   test('back button calls router.back()', () => {

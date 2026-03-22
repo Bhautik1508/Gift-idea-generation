@@ -79,6 +79,46 @@ export default function Home() {
             India-context aware
           </span>
         </div>
+
+        {/* How it works */}
+        <section className="mt-20 pt-16 border-t border-border w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 text-left max-w-2xl mx-auto">
+            {[
+              {
+                num: '01',
+                title: 'Tell us about them',
+                body: "Answer a few questions about who they are, what they love, and what's happening in their life right now."
+              },
+              {
+                num: '02',
+                title: 'We build their picture',
+                body: 'GiftSense reads your answers to understand who this person truly is — not just a list of preferences, but their context and what a gift needs to do for them emotionally.'
+              },
+              {
+                num: '03',
+                title: 'You choose with confidence',
+                body: 'We suggest specific gift directions with the reasoning behind each one. You pick what feels right. No more second-guessing.'
+              }
+            ].map((step) => (
+              <div key={step.num}>
+                <p className="text-5xl font-bold leading-none mb-4"
+                  style={{
+                    fontFamily: 'var(--font-heading)',
+                    color: 'var(--border)'
+                  }}>
+                  {step.num}
+                </p>
+                <h3 className="text-lg font-semibold text-foreground mb-2"
+                  style={{ fontFamily: 'var(--font-heading)' }}>
+                  {step.title}
+                </h3>
+                <p className="text-sm text-muted leading-relaxed">
+                  {step.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
       </main>
     </div>
   );

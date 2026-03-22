@@ -12,6 +12,23 @@
   --success: #22C55E;
   --warning: #F59E0B;
   --error: #EF4444;
+  color-scheme: light;
+}
+
+
+/* Dark mode — manual override */
+[data-theme="dark"] {
+  --background: #0F0F10;
+  --foreground: #E8E8E8;
+  --accent: #4D8AFF;
+  --accent-hover: #6B9FFF;
+  --muted: #9CA3AF;
+  --border: #2A2A2E;
+  --surface: #1A1A1E;
+  --success: #34D399;
+  --warning: #FBBF24;
+  --error: #F87171;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -50,11 +67,38 @@ h1, h2, h3, h4, h5, h6 {
 /* Form elements */
 input, textarea, select {
   font-family: var(--font-body);
-  font-size: 16px;
+  font-size: 16px; /* prevents iOS zoom on focus */
 }
 
 textarea {
   resize: vertical;
+}
+
+/* Skip-to-content — visually hidden until focused */
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 100;
+}
+
+.skip-to-content:focus {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  width: auto;
+  height: auto;
+  padding: 12px 24px;
+  background: var(--accent);
+  color: white;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  outline: none;
 }
 
 /* Pill button styles */
@@ -72,12 +116,17 @@ textarea {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-height: 44px;
+  min-height: 44px; /* WCAG touch target */
 }
 
 .pill-button:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.pill-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .pill-button.active {
@@ -94,6 +143,16 @@ textarea {
 
 .animate-fade-in {
   animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Page slide transition */
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slide-in {
+  animation: slideInRight 0.4s ease-out forwards;
 }
 
 /* Slow pulse for thinking page */
@@ -124,5 +183,26 @@ textarea {
   }
   40% {
     transform: scale(1);
+  }
+}
+
+/* Focus ring for interactive elements */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-in,
+  .animate-slow-pulse,
+  .animate-fade-swap {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
   }
 }

@@ -1,6 +1,13 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { GiftProvider } from "@/lib/GiftContext";
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  interactiveWidget: 'resizes-content',
+};
 
 export const metadata: Metadata = {
   title: "GiftSense — The right gift is already in your head",

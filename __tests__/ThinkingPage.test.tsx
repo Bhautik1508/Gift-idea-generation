@@ -16,7 +16,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => {
     updateFormData({ relationship: 'Friend', occasion: 'Birthday' });
   }, [updateFormData]);
 
-  // Don't render until form data is injected to prevent ThinkingPage from prematurely triggering its sanity check
+  // Don't render until form data is injected
   if (!formData.relationship) return null;
 
   return <>{children}</>;
@@ -39,7 +39,6 @@ describe('ThinkingPage', () => {
         }),
       })
     ) as jest.Mock;
-    
   });
 
   test('renders cycling messages', () => {
@@ -54,7 +53,21 @@ describe('ThinkingPage', () => {
     expect(screen.getByText('Reading the signals...')).toBeInTheDocument();
   });
 
-  test('handles API errors gracefully', async () => {
+  test('shows phased progress messages', () => {
+    render(
+      <GiftProvider>
+        <TestWrapper>
+          <ThinkingPage />
+        </TestWrapper>
+      </GiftProvider>
+    );
+
+    // Should have all expected messages rendered in the DOM (opacity-hidden ones too)
+    expect(screen.getByText('Building their portrait...')).toBeInTheDocument();
+    expect(screen.getByText('Ranking by confidence...')).toBeInTheDocument();
+  });
+
+  test('handles API errors and shows retry button', async () => {
     global.fetch = jest.fn(() =>
       Promise.resolve({
         ok: false,
@@ -71,6 +84,26 @@ describe('ThinkingPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Something went wrong — please try again.')).toBeInTheDocument();
-    }, { timeout: 2500 }); // The component has a 1.5s delay before showing errors/results sometimes, though for error it's immediate. Let's make sure.
+    }, { timeout: 2500 });
+
+    // Retry button should be present
+    expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
+  });
+
+  test('has all seven phased progress messages', () => {
+    render(
+      <GiftProvider>
+        <TestWrapper>
+          <ThinkingPage />
+        </TestWrapper>
+      </GiftProvider>
+    );
+
+    // All 7 phased messages should be rendered (visible or opacity-0)
+    expect(screen.getByText('Reading the signals...')).toBeInTheDocument();
+    expect(screen.getByText('Building their portrait...')).toBeInTheDocument();
+    expect(screen.getByText('Filtering out the generic stuff...')).toBeInTheDocument();
+    expect(screen.getByText('Ranking by confidence...')).toBeInTheDocument();
+    expect(screen.getByText('Almost there...')).toBeInTheDocument();
   });
 });

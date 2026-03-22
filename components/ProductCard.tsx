@@ -9,6 +9,8 @@ interface ProductCardProps {
 export default function ProductCard({ product, onReject }: ProductCardProps) {
   const [showRejectOptions, setShowRejectOptions] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+  const [rejectError, setRejectError] = useState('');
 
   // Confidence dot color
   let dotClass = '';
@@ -43,20 +45,44 @@ export default function ProductCard({ product, onReject }: ProductCardProps) {
       categoryClass = 'bg-gray-100 text-gray-700';
   }
 
-  // Occasion fit badge
-  const occasionClass =
-    product.occasion_fit === 'strong' ? 'bg-green-50 text-success border border-success/20' :
-    product.occasion_fit === 'good' ? 'bg-blue-50 text-blue-600 border border-blue-200' :
-    'bg-gray-50 text-muted border border-border';
-
   const handleReject = async (reason: string) => {
     if (!onReject) return;
     setIsRegenerating(true);
+    setRejectError('');
     try {
       await onReject(product.product_name, reason);
-    } finally {
+      setShowRejectOptions(false);
+      setIsRegenerating(false);
+    } catch (err) {
       setIsRegenerating(false);
       setShowRejectOptions(false);
+      setRejectError('Could not find a replacement. Try again.');
+      setTimeout(() => setRejectError(''), 3000);
+    }
+  };
+
+  const handleShare = async () => {
+    const text = [
+      `Gift idea: ${product.product_name}`,
+      `"${product.tagline}"`,
+      `${product.price_range}`,
+      `Why it fits: ${product.why_it_fits}`,
+      `Search for: ${product.search_keywords}`
+    ].join('\n');
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: product.product_name,
+          text
+        });
+      } else {
+        await navigator.clipboard.writeText(text);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+      }
+    } catch {
+      // User cancelled native share sheet — no error needed
     }
   };
 
@@ -78,7 +104,7 @@ export default function ProductCard({ product, onReject }: ProductCardProps) {
   return (
     <div className="flex flex-col h-full bg-surface border border-border rounded-2xl overflow-hidden hover:shadow-md transition-shadow duration-300 relative group">
       <div className="p-6 flex-grow flex flex-col">
-        {/* Top bar: Category + Confidence */}
+        {/* 1. Top bar — fixed height */}
         <div className="flex justify-between items-start mb-4">
           <span className={`px-3 py-1 text-xs font-semibold rounded-full ${categoryClass}`}>
             {product.category}
@@ -91,16 +117,11 @@ export default function ProductCard({ product, onReject }: ProductCardProps) {
           </div>
         </div>
 
-        {/* Header: Name + Relevance Signal + Tagline + Price */}
+        {/* 2. Product name + tagline + price — fixed height */}
         <div className="mb-6">
           <h3 className="text-[1.3rem] leading-tight font-semibold mb-1" style={{ fontFamily: 'var(--font-heading)' }}>
             {product.product_name}
           </h3>
-          {product.relevance_signal && (
-            <p className="text-[10px] uppercase font-bold tracking-wider text-muted/70 mb-2">
-              Based on: {product.relevance_signal}
-            </p>
-          )}
           <p className="text-[13px] italic text-muted mb-3" style={{ fontFamily: 'var(--font-sans)' }}>
             {product.tagline}
           </p>
@@ -111,8 +132,8 @@ export default function ProductCard({ product, onReject }: ProductCardProps) {
           </div>
         </div>
 
-        {/* Why it fits */}
-        <div className="bg-surface border border-border rounded-xl p-4 mb-3 shadow-sm">
+        {/* 3. Why it fits — ALWAYS flex-grow, expands to fill space */}
+        <div className="bg-surface border border-border rounded-xl p-4 mb-3 shadow-sm flex-grow">
           <h4 className="text-[10px] uppercase font-bold tracking-wider text-muted mb-2">
             Why this fits
           </h4>
@@ -121,49 +142,63 @@ export default function ProductCard({ product, onReject }: ProductCardProps) {
           </p>
         </div>
 
-        {/* Social Note */}
+        {/* 4. Social note — fixed height, only when present */}
         {product.social_note && (
-          <div className="bg-accent/5 border border-accent/10 rounded-xl p-4 mb-5 shadow-sm flex-grow">
-            <h4 className="text-[10px] uppercase font-bold tracking-wider text-accent/80 mb-2">
-              Social Context
-            </h4>
+          <div className="bg-accent/5 border border-accent/10 rounded-xl p-4 shadow-sm">
             <p className="text-[13px] leading-relaxed text-foreground/80 italic">
               {product.social_note}
             </p>
           </div>
         )}
-
-        <div className={`${!product.social_note ? 'flex-grow' : ''}`} />
-
-        {/* Occasion Badge */}
-        <div className="mt-auto">
-          <span className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${occasionClass}`}>
-            {product.occasion_fit === 'strong' ? 'Strong match' : product.occasion_fit === 'good' ? 'Good match' : 'Works'}
-          </span>
-        </div>
       </div>
 
-      {/* Action Strip */}
-      <div className="border-t border-border bg-gray-50/50 p-4 shrink-0 flex items-center justify-center">
+      {/* Single merged footer strip */}
+      <div className="border-t border-border bg-gray-50/50 px-4 py-3 shrink-0">
         {!showRejectOptions ? (
-          <a
-            href={`https://www.google.com/search?q=${encodeURIComponent(product.search_keywords)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-border rounded-lg text-sm font-medium text-foreground hover:border-accent hover:text-accent hover:shadow-sm transition-all group/btn"
-          >
-            <span>Find this</span>
-            <span className="opacity-50 group-hover/btn:opacity-100 group-hover/btn:translate-x-1 transition-all">→</span>
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href={`https://www.google.com/search?q=${encodeURIComponent(product.search_keywords)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 h-10 rounded-lg bg-accent text-white text-sm font-medium flex items-center justify-center gap-1.5 hover:bg-accent-hover transition-colors"
+            >
+              Find this
+              <span aria-hidden="true">→</span>
+            </a>
+            <button
+              onClick={handleShare}
+              className="w-10 h-10 flex-shrink-0 rounded-lg border border-border bg-surface text-foreground flex items-center justify-center hover:bg-black/5 transition-colors"
+              aria-label="Share this idea"
+            >
+              {shareCopied ? (
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" className="text-success">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8m-4-6l-4-4m0 0L8 6m4-4v12" />
+                </svg>
+              )}
+            </button>
+            {onReject && (
+              <button
+                onClick={() => setShowRejectOptions(true)}
+                className="text-xs text-muted hover:text-foreground transition-colors flex-shrink-0 px-2 py-2"
+              >
+                Not quite
+              </button>
+            )}
+          </div>
         ) : (
-          <div className="w-full animate-fade-in">
-            <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Why not?</p>
-            <div className="flex flex-wrap gap-2">
+          <div className="animate-fade-in">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted mb-2 block">Why not?</span>
+            <div className="flex items-center flex-wrap gap-2">
               {['Too expensive', 'Too personal', 'Not their style', 'They might have this'].map(r => (
                 <button
                   key={r}
                   onClick={() => handleReject(r)}
                   className="px-3 py-1.5 text-xs bg-white border border-border rounded-md hover:border-accent hover:text-accent transition-colors"
+                  disabled={isRegenerating}
                 >
                   {r}
                 </button>
@@ -171,23 +206,21 @@ export default function ProductCard({ product, onReject }: ProductCardProps) {
               <button
                 onClick={() => setShowRejectOptions(false)}
                 className="px-3 py-1.5 text-xs text-muted hover:text-foreground underline underline-offset-2 ml-auto"
+                disabled={isRegenerating}
               >
                 Cancel
               </button>
             </div>
           </div>
         )}
-      </div>
 
-      {/* Rejection trigger */}
-      {onReject && !showRejectOptions && (
-        <button
-          onClick={() => setShowRejectOptions(true)}
-          className="w-full text-xs text-muted hover:text-foreground transition-colors py-2 border-t border-border bg-surface"
-        >
-          Not quite
-        </button>
-      )}
+        {/* Inline error state */}
+        {rejectError && (
+          <p className="text-xs text-red-600 mt-2 animate-fade-in" role="alert">
+            {rejectError}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

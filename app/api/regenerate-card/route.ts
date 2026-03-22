@@ -1,9 +1,21 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { buildUserPrompt, SYSTEM_PROMPT } from '@/lib/prompts/giftRecommendation';
+import { rateLimit, getClientKey, withTimeout } from '@/lib/apiUtils';
+
+const GEMINI_TIMEOUT_MS = 15_000; // 15 seconds — single card should be fast
 
 export async function POST(req: Request) {
   try {
+    // Rate limiting: 10 requests per minute per IP (more generous for card rejects)
+    const clientKey = getClientKey(req);
+    if (!rateLimit(clientKey + ':regen', 10, 60_000)) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait a moment and try again.' },
+        { status: 429 }
+      );
+    }
+
     const { formData, rejectedProduct, rejectionReason } = await req.json();
 
     if (!formData || !rejectedProduct || !rejectionReason) {
@@ -17,7 +29,6 @@ export async function POST(req: Request) {
 
     const genAI = new GoogleGenerativeAI(API_KEY);
 
-    // Provide the original context + the targeted rejection instruction
     const userPromptFull = buildUserPrompt(formData) + `
 
 URGENT REJECTION CONTEXT:
@@ -25,7 +36,6 @@ The user rejected your previous recommendation for "[${rejectedProduct}]" becaus
 Your task is to generate ONE new, alternative gift recommendation that avoids this specific reason, while still fitting the overall profile.
 Return a SINGLE JSON object exactly matching the "recommendations" array items from the main schema (e.g., just the object itself, not wrapped in an array or root object).`;
 
-    // Strip out the array structure from SYSTEM_PROMPT expectations to ensure we just get 1 object.
     const REJECTION_SCHEMA = `
 {
   "product_name": "string",
@@ -62,26 +72,29 @@ ${REJECTION_SCHEMA}`;
           systemInstruction: customizedSystemPrompt,
         });
 
-        const result = await model.generateContent({
-          contents: [{ role: 'user', parts: [{ text: userPromptFull }] }],
-          generationConfig: {
-            temperature: 0.5,
-          },
-        });
+        const result = await withTimeout(
+          model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: userPromptFull }] }],
+            generationConfig: {
+              temperature: 0.5,
+            },
+          }),
+          GEMINI_TIMEOUT_MS,
+          `Gemini (${modelName})`
+        );
 
         const text = result.response.text();
         const jsonStringMatch = text.match(/\{[\s\S]*\}/);
         if (jsonStringMatch) {
           jsonMatch = jsonStringMatch[0];
-          break; // success, exit the cascade
+          break;
         } else {
           throw new Error('No valid JSON block found in output');
         }
       } catch (err: any) {
         lastError = err;
-        if (err.status === 429) {
-          // Rate limit met, continue to lower priority models
-          console.warn(`Model ${modelName} rate limited in regenerate. Cascading...`);
+        if (err.status === 429 || err.message?.includes('timed out')) {
+          console.warn(`Model ${modelName} rate limited or timed out in regenerate. Cascading...`);
           continue;
         } else {
           continue;
@@ -95,7 +108,6 @@ ${REJECTION_SCHEMA}`;
 
     const recommendation = JSON.parse(jsonMatch);
     
-    // Ensure all required fields exist
     if (!recommendation.product_name || !recommendation.why_it_fits) {
       throw new Error('Malformed JSON response from AI');
     }
@@ -103,6 +115,11 @@ ${REJECTION_SCHEMA}`;
     return NextResponse.json(recommendation);
   } catch (error) {
     console.error('API Error in /regenerate-card:', error);
-    return NextResponse.json({ error: 'Failed to generate replacement concept.' }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    const status = message.includes('timed out') ? 504 : 500;
+    return NextResponse.json(
+      { error: 'Failed to generate replacement concept.' },
+      { status }
+    );
   }
 }

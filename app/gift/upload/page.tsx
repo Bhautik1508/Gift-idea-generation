@@ -31,7 +31,7 @@ async function extractTextFromFile(file: File): Promise<string> {
 
 export default function UploadPage() {
   const router = useRouter();
-  const { setChatSignals, formData } = useGift();
+  const { setChatSignals, clearChatSignals, formData } = useGift();
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -138,34 +138,26 @@ export default function UploadPage() {
   return (
     <div className="animate-fade-in max-w-2xl mx-auto">
       <div className="mb-10">
-        <ProgressBar currentStep={3} totalSteps={3} />
+        <ProgressBar currentStep={4} totalSteps={4} />
         <h1 className="text-3xl font-semibold mt-6 mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
           Deeper Signals (Optional)
         </h1>
         <p className="text-muted">
           Upload a WhatsApp chat export with this person for deeper, more personal recommendations.
         </p>
-        <p className="text-xs text-muted/60 mt-2">
+        <p className="text-xs text-muted/60 mt-2 mb-6">
           Your chat is never stored. It&apos;s processed once and discarded.
-        </p>
-      </div>
-
-      {/* Instruction block */}
-      <div className="text-center mb-8 max-w-lg mx-auto">
-        <h2 className="text-3xl font-semibold mb-3 tracking-tight text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>Upload chat history</h2>
-        <p className="text-muted text-sm sm:text-base mb-6 leading-relaxed">
-          Export a WhatsApp chat (Without Media) and drop the <code className="bg-muted/10 px-1.5 py-0.5 rounded text-xs">.txt</code> file here. We'll analyze it to find the perfect gift. 
         </p>
 
         <button 
           onClick={() => setHowToOpen(!howToOpen)}
           className="text-sm font-medium text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
         >
-          How to get the file {howToOpen ? '↑' : '↓'}
+          How to export your WhatsApp chat {howToOpen ? '↑' : '↓'}
         </button>
 
         {howToOpen && (
-          <div className="mt-4 p-5 bg-surface border border-border rounded-xl text-left shadow-sm animate-fade-in text-sm text-foreground/80 max-w-sm mx-auto">
+          <div className="mt-4 p-5 bg-surface border border-border rounded-xl text-left shadow-sm animate-fade-in text-sm text-foreground/80 max-w-sm">
             <div className="flex gap-2 mb-4">
               <button 
                 onClick={() => setHowToTab('ios')}
@@ -230,7 +222,7 @@ export default function UploadPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setChatSignals(undefined as any)}
+                  onClick={() => clearChatSignals()}
                   className="h-12 px-6 rounded-full border border-border text-foreground hover:bg-black/5 transition-colors"
                 >
                   Replace

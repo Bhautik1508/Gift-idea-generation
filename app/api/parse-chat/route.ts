@@ -5,11 +5,33 @@ import {
   parseWhatsAppChat,
   formatBothSides,
 } from '@/lib/chatParser';
+import { rateLimit, getClientKey, withTimeout } from '@/lib/apiUtils';
 
 export const runtime = 'nodejs';
 
+const MAX_BODY_BYTES = 2_000_000; // 2 MB — chat files can be large
+const GEMINI_TIMEOUT_MS = 25_000;
+
 export async function POST(req: Request) {
   try {
+    // Rate limiting: 5 requests per minute per IP
+    const clientKey = getClientKey(req);
+    if (!rateLimit(clientKey + ':chat', 5, 60_000)) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait a moment and try again.' },
+        { status: 429 }
+      );
+    }
+
+    // Body size check
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > MAX_BODY_BYTES) {
+      return NextResponse.json(
+        { error: 'Chat file is too large. Please export without media and try again.' },
+        { status: 413 }
+      );
+    }
+
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
@@ -41,10 +63,9 @@ export async function POST(req: Request) {
     // 2. Format both sides to token budget (anonymized)
     const anonymizedText = formatBothSides(allMessages, recipientName, 5000);
 
-    // 4. Call Gemini for signal extraction
+    // 3. Call Gemini for signal extraction
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // Helper to cascade through available models if quota is hit
     const generateWithFallback = async (options: any) => {
       const modelsToTry = [
         'gemini-2.5-flash',
@@ -57,17 +78,26 @@ export async function POST(req: Request) {
       for (const modelName of modelsToTry) {
         try {
           const model = genAI.getGenerativeModel({ model: modelName });
-          return await model.generateContent(options);
+          const result = await withTimeout(
+            model.generateContent(options),
+            GEMINI_TIMEOUT_MS,
+            `Gemini (${modelName})`
+          );
+          return result;
         } catch (e: any) {
           lastError = e;
           if (e.status === 429 || e.message?.includes('429') || e.message?.includes('Quota') || e.message?.includes('limit')) {
             console.warn(`Quota exceeded for ${modelName}. Trying next model...`);
             continue;
           }
-          throw e; // throw immediately if it's not a quota error
+          if (e.message?.includes('timed out')) {
+            console.warn(`${modelName} timed out. Trying next model...`);
+            continue;
+          }
+          throw e;
         }
       }
-      throw lastError; // if all fail
+      throw lastError;
     };
 
     const result = await generateWithFallback({
@@ -83,14 +113,12 @@ export async function POST(req: Request) {
       ],
       systemInstruction: CHAT_SIGNAL_PROMPT,
       generationConfig: {
-        temperature: 0.3, // Lower temp for extraction accuracy
+        temperature: 0.3,
         responseMimeType: 'application/json',
       },
     });
 
     let text = result.response.text();
-
-    // Strip markdown code blocks if gemini included them despite responseMimeType
     text = text.replace(/^```(json)?/, '').replace(/```$/, '').trim();
 
     try {
@@ -105,9 +133,11 @@ export async function POST(req: Request) {
     }
   } catch (error) {
     console.error('Chat parse API error:', error);
+    const message = error instanceof Error ? error.message : String(error);
+    const status = message.includes('timed out') ? 504 : 500;
     return NextResponse.json(
-      { error: 'Failed to extract signals from chat. Please try again. Details: ' + (error instanceof Error ? error.message : String(error)) },
-      { status: 500 }
+      { error: 'Failed to extract signals from chat. Please try again. Details: ' + message },
+      { status }
     );
   }
 }

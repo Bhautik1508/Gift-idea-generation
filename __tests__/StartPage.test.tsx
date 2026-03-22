@@ -24,7 +24,7 @@ describe('StartPage', () => {
       </GiftProvider>,
     );
     expect(screen.getByText('The Basics')).toBeInTheDocument();
-    expect(screen.getByText('Step 1 of 3')).toBeInTheDocument();
+    expect(screen.getByText('Step 1 of 4')).toBeInTheDocument();
   });
 
   test('next button is disabled initially', () => {
@@ -44,23 +44,17 @@ describe('StartPage', () => {
       </GiftProvider>,
     );
     
-    // Fill relationship and occasion
-    const comboboxes = screen.getAllByRole('combobox');
-    fireEvent.change(comboboxes[0], { target: { value: 'Close friend' } });
-    fireEvent.change(comboboxes[1], { target: { value: 'Birthday' } });
-
-    // Click age and gender
-    const ageButton = screen.getByText('26–35');
-    fireEvent.click(ageButton);
-    const genderButton = screen.getByText('Woman');
-    fireEvent.click(genderButton);
-
-    const budgetButton = screen.getByText('₹3k–7.5k');
-    fireEvent.click(budgetButton);
+    // Click relationship pill
+    fireEvent.click(screen.getByText('Close friend'));
+    // Click age pill
+    fireEvent.click(screen.getByText('26–35'));
+    // Click occasion pill
+    fireEvent.click(screen.getByText('Birthday'));
+    // Click budget pill
+    fireEvent.click(screen.getByText('₹3k–7.5k'));
     
     // Now it should be enabled
     const button = screen.getByRole('button', { name: /Next: Tell us about them/i });
     expect(button).not.toBeDisabled();
-    expect(budgetButton).toHaveClass('active');
   });
 });

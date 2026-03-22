@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import ResultPage from '@/app/gift/result/page';
 import { GiftProvider, useGift } from '@/lib/GiftContext';
 import { useRouter } from 'next/navigation';
@@ -43,6 +44,21 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const mockEmptyResult: GiftOutput = {
+  ...mockResult,
+  recommendations: [],
+};
+
+const TestWrapperEmpty = ({ children }: { children: React.ReactNode }) => {
+  const { setResult } = useGift();
+  
+  React.useEffect(() => {
+    setResult(mockEmptyResult);
+  }, [setResult]);
+
+  return <>{children}</>;
+};
+
 describe('ResultPage', () => {
   const mockPush = jest.fn();
   const mockReplace = jest.fn();
@@ -61,7 +77,7 @@ describe('ResultPage', () => {
     expect(mockReplace).toHaveBeenCalledWith('/gift/start');
   });
 
-  test('renders portrait banner and product cards when result exists', () => {
+  test('renders context header and product cards when result exists', async () => {
     render(
       <GiftProvider>
         <TestWrapper>
@@ -70,13 +86,24 @@ describe('ResultPage', () => {
       </GiftProvider>
     );
     
-    // Check Portrait Banner
-    expect(screen.getByText(/"We think they are a creative soul\."/)).toBeInTheDocument();
-    expect(screen.getByText(/Testing signal is strong/i)).toBeInTheDocument();
+    // Check context header shows gift intention
+    expect(screen.getByText('Celebrate their creative side')).toBeInTheDocument();
 
     // Check Product Card
     expect(screen.getByText('Pottery Class')).toBeInTheDocument();
     expect(screen.getByText('Experience')).toBeInTheDocument();
     expect(screen.getByText('₹1.5k–3k')).toBeInTheDocument();
+  });
+
+  test('renders empty state when no recommendations are found', () => {
+    render(
+      <GiftProvider>
+        <TestWrapperEmpty>
+          <ResultPage />
+        </TestWrapperEmpty>
+      </GiftProvider>
+    );
+    expect(screen.getByText('We need a little more to go on')).toBeInTheDocument();
+    expect(screen.getByText('Add more about them')).toBeInTheDocument();
   });
 });

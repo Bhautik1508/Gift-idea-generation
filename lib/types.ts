@@ -3,7 +3,6 @@
 export interface GiftFormData {
   relationship: string;
   recipientAge: string;
-  recipientGender: string;
   occasion: string;
   budget: string[];
   recipientCity: string;
@@ -12,7 +11,6 @@ export interface GiftFormData {
   wishedFor: string;
   personality: string[];
   pastGiftResponse: string[];
-  lifestyle: string;
   lifeStage: string;
   giftIntent?: string;
   chatSignals?: ChatSignals;

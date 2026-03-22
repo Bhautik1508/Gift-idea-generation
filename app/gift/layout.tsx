@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import GiftHeader from '@/components/GiftHeader';
 
 export default function GiftLayout({
   children,
@@ -7,14 +7,14 @@ export default function GiftLayout({
 }) {
   return (
     <div className="flex flex-col flex-1 min-h-screen">
-      {/* Optional: We can add a simple header with a back button or logo here if needed */}
-      <header className="w-full h-16 flex items-center px-6 border-b border-border/50 bg-white/50 backdrop-blur-sm sticky top-0 z-10">
-        <Link href="/" className="text-xl font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
-          GiftSense
-        </Link>
-      </header>
+      {/* Skip to content — a11y */}
+      <a href="#main-content" className="skip-to-content">
+        Skip to content
+      </a>
+
+      <GiftHeader />
       
-      <main className="flex-1 w-full max-w-2xl mx-auto px-6 py-8 md:py-12">
+      <main id="main-content" className="flex-1 w-full max-w-2xl mx-auto px-6 py-8 md:py-12">
         {children}
       </main>
     </div>

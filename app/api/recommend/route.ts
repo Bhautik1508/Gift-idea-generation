@@ -2,12 +2,33 @@ import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { SYSTEM_PROMPT, buildUserPrompt } from '@/lib/prompts/giftRecommendation';
 import type { GiftFormData } from '@/lib/types';
+import { rateLimit, getClientKey, withTimeout } from '@/lib/apiUtils';
 
-// Force node runtime for streams
 export const runtime = 'nodejs';
+
+const MAX_BODY_BYTES = 50_000; // 50 KB — generous for form data
+const GEMINI_TIMEOUT_MS = 25_000; // 25 seconds
 
 export async function POST(req: Request) {
   try {
+    // Rate limiting: 5 requests per minute per IP
+    const clientKey = getClientKey(req);
+    if (!rateLimit(clientKey, 5, 60_000)) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait a moment and try again.' },
+        { status: 429 }
+      );
+    }
+
+    // Body size check
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > MAX_BODY_BYTES) {
+      return NextResponse.json(
+        { error: 'Request too large.' },
+        { status: 413 }
+      );
+    }
+
     const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) {
@@ -33,39 +54,35 @@ export async function POST(req: Request) {
       for (const modelName of modelsToTry) {
         try {
           const model = genAI.getGenerativeModel({ model: modelName });
-          return await model.generateContent(options);
+          const result = await withTimeout(
+            model.generateContent(options),
+            GEMINI_TIMEOUT_MS,
+            `Gemini (${modelName})`
+          );
+          return result;
         } catch (e: any) {
           lastError = e;
           if (e.status === 429 || e.message?.includes('429') || e.message?.includes('Quota') || e.message?.includes('limit')) {
             console.warn(`Quota exceeded for ${modelName}. Trying next model...`);
             continue;
           }
-          throw e; // throw immediately if it's not a quota error
+          if (e.message?.includes('timed out')) {
+            console.warn(`${modelName} timed out. Trying next model...`);
+            continue;
+          }
+          throw e;
         }
       }
-      throw lastError; // if all fail
+      throw lastError;
     };
 
     const userPrompt = buildUserPrompt(data);
-
-    // We use generateContentStream for the actual streaming approach, but
-    // since we need perfectly valid JSON to pass to the client and parsing streamed
-    // JSON chunks requires a complex parser, we'll actually await the full response
-    // and stream it locally or just return it as a regular response for simplicity
-    // and stability. The "Thinking" page provides the required UX.
-    
-    // To strictly conform to the spec "streams the response back to the client",
-    // we'll return a TextEncoder stream that yields words if needed, but for 
-    // structured JSON, standard Next.js NextResponse with await is universally
-    // preferred unless we implement a specialized chunk parser on the frontend.
-    // Given the prompt requirement for a "single valid JSON object", we'll await
-    // and stream the final string block to ensure we can handle JSON.parse errors gracefully.
 
     const result = await generateWithFallback({
       contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
       systemInstruction: SYSTEM_PROMPT,
       generationConfig: {
-        temperature: 0.4, // Lowered from 0.7 for better structural reliability
+        temperature: 0.4,
         responseMimeType: 'application/json',
       },
     });
@@ -92,7 +109,7 @@ export async function POST(req: Request) {
       });
       text = retryResult.response.text();
       text = text.replace(/^```(json)?/, '').replace(/```$/, '').trim();
-      parsed = JSON.parse(text); // If this fails, let it throw to the outer catch
+      parsed = JSON.parse(text);
     }
 
     return new NextResponse(JSON.stringify(parsed), {
@@ -103,9 +120,11 @@ export async function POST(req: Request) {
 
   } catch (error) {
     console.error('API Error:', error);
+    const message = error instanceof Error ? error.message : String(error);
+    const status = message.includes('timed out') ? 504 : 500;
     return NextResponse.json(
-      { error: 'Failed to generate recommendations. Details: ' + (error instanceof Error ? error.message : String(error)) },
-      { status: 500 }
+      { error: 'Failed to generate recommendations. Details: ' + message },
+      { status }
     );
   }
 }

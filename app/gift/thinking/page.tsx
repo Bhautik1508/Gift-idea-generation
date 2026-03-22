@@ -4,25 +4,32 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGift } from '@/lib/GiftContext';
 
+const TIMEOUT_MS = 30_000; // 30 seconds
+
 export default function ThinkingPage() {
   const router = useRouter();
   const { formData, setResult, isLoading, setIsLoading } = useGift();
   const [messageIndex, setMessageIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [timedOut, setTimedOut] = useState(false);
   const fetchedRef = useRef(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
+  // Phased progress messages — ordered to feel like real work
   const loadingMessages = React.useMemo(() => {
     const rel = formData.relationship?.toLowerCase() || 'person';
     const occ = formData.occasion?.toLowerCase() || 'occasion';
     return [
       "Reading the signals...",
       `Thinking about what a ${rel} really values...`,
+      "Building their portrait...",
       `Finding something special for this ${occ}...`,
       "Filtering out the generic stuff...",
+      "Ranking by confidence...",
       "Almost there...",
     ];
   }, [formData.relationship, formData.occasion]);
@@ -37,21 +44,24 @@ export default function ThinkingPage() {
 
   // Fetch from API
   useEffect(() => {
-    // Prevent double fetch in StrictMode
     if (fetchedRef.current) return;
     fetchedRef.current = true;
 
     async function fetchRecommendations() {
       setIsLoading(true);
       setError(null);
+      setTimedOut(false);
 
-      // Sanity check
       if (!formData.relationship || !formData.occasion) {
-        // Missing data, maybe page refresh. Go back.
         setIsLoading(false);
         router.push('/gift/start');
         return;
       }
+
+      // Start timeout timer
+      timeoutRef.current = setTimeout(() => {
+        setTimedOut(true);
+      }, TIMEOUT_MS);
 
       try {
         const response = await fetch('/api/recommend', {
@@ -60,24 +70,30 @@ export default function ThinkingPage() {
           body: JSON.stringify(formData),
         });
 
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
         if (!response.ok) {
           throw new Error('API returned an error');
         }
 
         const data = await response.json();
-        
+
         setResult(data);
         setIsLoading(false);
-        router.push('/gift/portrait');
+        router.push('/gift/result');
 
       } catch (err) {
-        // console.error intentionally omitted to prevent Next.js dev overlay for expected errors
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
         setError('Something went wrong — please try again.');
         setIsLoading(false);
       }
     }
 
     fetchRecommendations();
+
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, [formData, router, setResult, setIsLoading]);
 
   if (error) {
@@ -98,6 +114,7 @@ export default function ThinkingPage() {
           onClick={() => {
             fetchedRef.current = false;
             setError(null);
+            setTimedOut(false);
           }}
           className="h-12 px-8 rounded-full bg-foreground text-white font-medium hover:bg-black/80 transition-colors"
         >
@@ -134,6 +151,25 @@ export default function ThinkingPage() {
           </h2>
         ))}
       </div>
+
+      {/* Timeout nudge */}
+      {timedOut && (
+        <div className="mt-8 animate-fade-in text-center">
+          <p className="text-sm text-muted mb-4">
+            This is taking longer than expected.
+          </p>
+          <button
+            onClick={() => {
+              fetchedRef.current = false;
+              setTimedOut(false);
+              setError(null);
+            }}
+            className="text-sm font-medium text-accent hover:text-accent-hover underline underline-offset-4 transition-colors"
+          >
+            Retry?
+          </button>
+        </div>
+      )}
     </div>
   );
 }

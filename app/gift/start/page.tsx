@@ -8,7 +8,11 @@ import QuestionCard from '@/components/QuestionCard';
 import { RELATIONSHIPS, OCCASIONS, BUDGETS } from '@/lib/types';
 
 const AGES = ['Under 18', '18–25', '26–35', '36–50', '51–65', '65+'];
-const GENDERS = ['Woman', 'Man', 'Non-binary', 'Prefer not to say'];
+const CITIES = [
+  'Mumbai', 'Delhi NCR', 'Bengaluru', 'Hyderabad',
+  'Chennai', 'Pune', 'Kolkata', 'Ahmedabad',
+  'Jaipur', 'Kochi', 'Other city'
+];
 
 export default function StartPage() {
   const router = useRouter();
@@ -21,7 +25,6 @@ export default function StartPage() {
   const isComplete =
     !!formData.relationship &&
     !!formData.recipientAge &&
-    !!formData.recipientGender &&
     !!formData.occasion &&
     formData.budget.length > 0;
 
@@ -44,7 +47,7 @@ export default function StartPage() {
   return (
     <div className="animate-fade-in">
       <div className="mb-10">
-        <ProgressBar currentStep={1} totalSteps={3} />
+        <ProgressBar currentStep={1} totalSteps={4} />
         <h1 className="text-3xl font-semibold mt-6 mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
           The Basics
         </h1>
@@ -52,19 +55,20 @@ export default function StartPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-10">
-        {/* Q1: Relationship */}
+        {/* Q1: Relationship — pill grid */}
         <QuestionCard label="Who are you gifting?">
-          <select
-            value={formData.relationship}
-            onChange={(e) => updateFormData({ relationship: e.target.value })}
-            className="w-full h-14 px-4 rounded-xl border border-border bg-surface text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
-            required
-          >
-            <option value="" disabled>Select relationship</option>
+          <div className="flex flex-wrap gap-3">
             {RELATIONSHIPS.map((rel) => (
-              <option key={rel} value={rel}>{rel}</option>
+              <button
+                key={rel}
+                type="button"
+                onClick={() => updateFormData({ relationship: rel })}
+                className={`pill-button ${formData.relationship === rel ? 'active' : ''}`}
+              >
+                {rel}
+              </button>
             ))}
-          </select>
+          </div>
         </QuestionCard>
 
         {/* Q2: Age */}
@@ -83,38 +87,23 @@ export default function StartPage() {
           </div>
         </QuestionCard>
 
-        {/* Q3: Gender */}
-        <QuestionCard label="Their gender?">
+        {/* Q3: Occasion — pill grid */}
+        <QuestionCard label="What is the occasion?">
           <div className="flex flex-wrap gap-3">
-            {GENDERS.map((gender) => (
+            {OCCASIONS.map((occ) => (
               <button
-                key={gender}
+                key={occ}
                 type="button"
-                onClick={() => updateFormData({ recipientGender: gender })}
-                className={`pill-button ${formData.recipientGender === gender ? 'active' : ''}`}
+                onClick={() => updateFormData({ occasion: occ })}
+                className={`pill-button ${formData.occasion === occ ? 'active' : ''}`}
               >
-                {gender}
+                {occ}
               </button>
             ))}
           </div>
         </QuestionCard>
 
-        {/* Q4: Occasion */}
-        <QuestionCard label="What is the occasion?">
-          <select
-            value={formData.occasion}
-            onChange={(e) => updateFormData({ occasion: e.target.value })}
-            className="w-full h-14 px-4 rounded-xl border border-border bg-surface text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
-            required
-          >
-            <option value="" disabled>Select occasion</option>
-            {OCCASIONS.map((occ) => (
-              <option key={occ} value={occ}>{occ}</option>
-            ))}
-          </select>
-        </QuestionCard>
-
-        {/* Q5: Budget */}
+        {/* Q4: Budget */}
         <QuestionCard label="What is your budget?" description="Select all that apply.">
           <div className="flex flex-wrap gap-3">
             {BUDGETS.map((budget) => {
@@ -138,15 +127,27 @@ export default function StartPage() {
           )}
         </QuestionCard>
 
-        {/* Q6: City (Optional) */}
-        <QuestionCard label="Which city are they in? (Optional)" description="Helps us suggest local experiences and relevant search keywords.">
-          <input
-            type="text"
-            value={formData.recipientCity ?? ''}
-            onChange={(e) => updateFormData({ recipientCity: e.target.value })}
-            placeholder="e.g. Mumbai, Bangalore, Delhi"
-            className="w-full h-14 px-4 rounded-xl border border-border bg-surface text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
-          />
+        {/* Q5: City (Optional) */}
+        <QuestionCard label="Which city are they in? (Optional)" description="Helps personalise experience suggestions to their city.">
+          <div className="flex flex-wrap gap-3">
+            {CITIES.map((city) => (
+              <button
+                key={city}
+                type="button"
+                onClick={() =>
+                  updateFormData({
+                    recipientCity:
+                      formData.recipientCity === city ? '' : city
+                  })
+                }
+                className={`pill-button ${
+                  formData.recipientCity === city ? 'active' : ''
+                }`}
+              >
+                {city}
+              </button>
+            ))}
+          </div>
         </QuestionCard>
 
         <div className="pt-6 border-t border-border">

@@ -10,7 +10,6 @@ const CONFIDENCE_ORDER = { high: 0, medium: 1, low: 2 } as const;
 export default function ResultPage() {
   const router = useRouter();
   const { result, resetAll, formData, replaceRecommendation } = useGift();
-  const [portraitExpanded, setPortraitExpanded] = useState(false);
   const [showLowConfidence, setShowLowConfidence] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -33,6 +32,32 @@ export default function ResultPage() {
   }, [result, router]);
 
   if (!result) return null;
+
+  if (!result.recommendations || result.recommendations.length === 0) {
+    return (
+      <div className="animate-fade-in max-w-2xl mx-auto pt-10 px-4 pb-20 text-center">
+        <div className="w-16 h-16 bg-accent/10 text-accent rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-semibold mb-3" style={{ fontFamily: 'var(--font-heading)' }}>
+          We need a little more to go on
+        </h2>
+        <p className="text-muted mb-8 leading-relaxed max-w-md mx-auto">
+          We couldn&apos;t generate confident recommendations with
+          what we have. Adding a few more details about them
+          usually helps a lot.
+        </p>
+        <button
+          onClick={() => router.push('/gift/about')}
+          className="h-12 px-8 rounded-full bg-accent text-white font-medium hover:bg-accent-hover transition-all shadow-md"
+        >
+          Add more about them
+        </button>
+      </div>
+    );
+  }
 
   const handleStartOver = () => {
     resetAll();
@@ -79,22 +104,19 @@ export default function ResultPage() {
       }
     } catch (err) {
       console.error(err);
-      alert('Failed to find a replacement. Please try again.');
+      // Error is shown inline on the card via rejectError state
+      throw err;
     }
   };
 
-  const portraitText = result.portrait;
-
   // Sort recommendations based on selected territory + confidence
   const sorted = [...(result.recommendations || [])].sort((a, b) => {
-    // 1. Move items matching the territory name / theme to the top implicitly
     const territoryWords = formData.selectedTerritoryTitle?.toLowerCase().split(' ') || [];
     const aMatch = territoryWords.some(w => w.length > 3 && (a.relevance_signal || '').toLowerCase().includes(w)) ? 1 : 0;
     const bMatch = territoryWords.some(w => w.length > 3 && (b.relevance_signal || '').toLowerCase().includes(w)) ? 1 : 0;
     
     if (aMatch !== bMatch) return bMatch - aMatch;
     
-    // 2. Sort by confidence
     return CONFIDENCE_ORDER[a.confidence] - CONFIDENCE_ORDER[b.confidence];
   });
   const mainCards = sorted.filter((r) => r.confidence !== 'low');
@@ -103,86 +125,73 @@ export default function ResultPage() {
   return (
     <div className="animate-fade-in pb-16">
 
-      {/* QUALITY 5: Expandable Portrait Panel */}
-      <div className="mb-10 text-center space-y-3">
-        <p className="text-xl italic text-foreground/90 max-w-2xl mx-auto" style={{ fontFamily: 'var(--font-heading)' }}>
-          &quot;{portraitText}&quot;
+      {/* Context + intention header */}
+      <div className="mb-10 text-center space-y-3 max-w-2xl mx-auto">
+        {/* Occasion · Relationship · City */}
+        <p className="text-sm font-medium text-muted tracking-wide uppercase">
+          {[formData.occasion, formData.relationship,
+            formData.recipientCity].filter(Boolean).join(' · ')}
         </p>
 
-        {/* Expandable detail — gift intention + confidence reason */}
-        {(result.gift_intention || result.confidence_reason) && (
-          <button
-            onClick={() => setPortraitExpanded((v) => !v)}
-            className="text-xs text-accent hover:text-accent-hover font-medium transition-colors"
-          >
-            {portraitExpanded ? 'Show less ▲' : 'What we\u2019re going for ▼'}
-          </button>
+        {/* Selected territory */}
+        {formData.selectedTerritoryTitle && (
+          <p className="text-lg font-semibold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
+            {formData.selectedTerritoryTitle}
+          </p>
         )}
 
-        {portraitExpanded && (
-          <div className="max-w-xl mx-auto bg-surface border border-border rounded-xl p-5 text-left space-y-3 animate-fade-in shadow-sm">
-            {result.gift_intention && (
-              <div>
-                <h4 className="text-[10px] uppercase font-bold tracking-wider text-muted mb-1">Gift intention</h4>
-                <p className="text-sm text-foreground/90">{result.gift_intention}</p>
-              </div>
-            )}
-            {result.confidence_reason && (
-              <div>
-                <h4 className="text-[10px] uppercase font-bold tracking-wider text-muted mb-1">Signal quality</h4>
-                <p className="text-sm text-foreground/90">{result.confidence_reason}</p>
-              </div>
-            )}
-          </div>
+        {/* Gift intention — the "goal" sentence */}
+        {result.gift_intention && (
+          <p className="text-base italic text-foreground/70">
+            {result.gift_intention}
+          </p>
         )}
-
-        <div className="mt-2 text-center text-sm text-muted italic max-w-xl mx-auto px-4">
-          {result.confidence_reason}
-        </div>
       </div>
 
       {/* Product Grid — sorted high > medium */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
           {mainCards.map((product, idx) => (
             <ProductCard key={`${product.product_name}-${idx}`} product={product} onReject={handleReject} />
           ))}
         </div>
 
-      {/* QUALITY 6: Collapsible "Also considered" for low-confidence */}
-      {lowCards.length > 0 && (
-        <div className="max-w-5xl mx-auto mt-10">
-          <button
-            onClick={() => setShowLowConfidence((v) => !v)}
-            className="flex items-center gap-2 text-sm font-medium text-muted hover:text-foreground transition-colors mx-auto"
-          >
-            <span>{showLowConfidence ? '▲' : '▼'}</span>
-            <span>Also considered ({lowCards.length})</span>
-          </button>
-          {showLowConfidence && (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 opacity-70 hover:opacity-100 transition-opacity">
-              {lowCards.map((product, idx) => (
-                <ProductCard key={`${product.product_name}-low-${idx}`} product={product} onReject={handleReject} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+        {/* Collapsible "Also considered" for low-confidence */}
+        {lowCards.length > 0 && (
+          <div className="mt-10">
+            <button
+              onClick={() => setShowLowConfidence((v) => !v)}
+              className="flex items-center gap-2 text-sm font-medium text-muted hover:text-foreground transition-colors mx-auto"
+            >
+              <span>{showLowConfidence ? '▲' : '▼'}</span>
+              <span>Also considered ({lowCards.length})</span>
+            </button>
+            {showLowConfidence && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 items-stretch">
+                {lowCards.map((product, idx) => (
+                  <ProductCard key={`${product.product_name}-low-${idx}`} product={product} onReject={handleReject} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-      {/* Action Strip */}
-      <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-16 pb-8">
-        <button
-          onClick={handleCopy}
-          className="h-12 px-8 rounded-full bg-accent text-white font-medium hover:bg-accent-hover transition-all shadow-md w-full sm:w-auto"
-        >
-          {copied ? 'Copied to clipboard! ✓' : 'Copy all ideas'}
-        </button>
-        <button
-          onClick={() => router.push('/gift/about')}
-          className="h-12 px-8 rounded-full border border-border bg-surface text-foreground font-medium hover:border-accent/50 hover:bg-accent/5 transition-all shadow-sm w-full sm:w-auto"
-        >
-          Refine for same person
-        </button>
-      </div>
+        {/* Action Strip */}
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-16 pb-8">
+          <button
+            onClick={handleCopy}
+            className="h-12 px-8 rounded-full border border-border bg-surface text-foreground font-medium hover:border-accent/50 hover:bg-accent/5 transition-all shadow-sm w-full sm:w-auto"
+          >
+            {copied ? 'Copied to clipboard! ✓' : 'Copy all ideas'}
+          </button>
+          <button
+            onClick={() => router.push('/gift/about')}
+            className="h-12 px-8 rounded-full bg-accent text-white font-medium hover:bg-accent-hover transition-all shadow-md w-full sm:w-auto"
+          >
+            Refine for same person
+          </button>
+        </div>
+      </>
 
       <div className="flex flex-col sm:flex-row justify-center items-center gap-6 mt-4 pb-16">
         <button
