@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGift } from '@/lib/GiftContext';
 import ProductCard from '@/components/ProductCard';
+import CompareBar from '@/components/CompareBar';
+import { saveProfile } from '@/lib/profiles';
+import type { GiftRecommendation } from '@/lib/types';
 
 const CONFIDENCE_ORDER = { high: 0, medium: 1, low: 2 } as const;
 
@@ -12,10 +15,33 @@ export default function ResultPage() {
   const { result, resetAll, formData, replaceRecommendation } = useGift();
   const [showLowConfidence, setShowLowConfidence] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [compareItems, setCompareItems] = useState<GiftRecommendation[]>([]);
+  const [shareUrl, setShareUrl] = useState('');
+  const [shareCopied, setShareCopied] = useState(false);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
+
+  // Save session to sessionStorage for share links
+  useEffect(() => {
+    if (result && result.recommendations?.length > 0) {
+      const sessionId = `gs_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+      const shareData = {
+        formData: { relationship: formData.relationship, occasion: formData.occasion, recipientCity: formData.recipientCity },
+        result,
+      };
+      try {
+        sessionStorage.setItem(`giftsense_shared_${sessionId}`, JSON.stringify(shareData));
+        if (typeof window !== 'undefined') {
+          setShareUrl(`${window.location.origin}/gift/shared/${sessionId}`);
+        }
+      } catch { /* sessionStorage full */ }
+    }
+  }, [result, formData.relationship, formData.occasion, formData.recipientCity]);
 
   // If page is accessed directly without data, bounce to start
   useEffect(() => {
@@ -30,6 +56,21 @@ export default function ResultPage() {
       }
     }
   }, [result, router]);
+
+  const handleCompareToggle = useCallback((product: GiftRecommendation) => {
+    setCompareItems((prev) => {
+      const exists = prev.some(p => p.product_name === product.product_name);
+      if (exists) {
+        return prev.filter(p => p.product_name !== product.product_name);
+      }
+      if (prev.length >= 3) return prev; // Max 3
+      return [...prev, product];
+    });
+  }, []);
+
+  const handleCompareRemove = useCallback((name: string) => {
+    setCompareItems((prev) => prev.filter(p => p.product_name !== name));
+  }, []);
 
   if (!result) return null;
 
@@ -77,6 +118,14 @@ export default function ResultPage() {
     });
   };
 
+  const handleShareSession = () => {
+    if (!shareUrl) return;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2500);
+    });
+  };
+
   const handleFeedback = () => {
     router.push('/gift/feedback');
   };
@@ -104,7 +153,6 @@ export default function ResultPage() {
       }
     } catch (err) {
       console.error(err);
-      // Error is shown inline on the card via rejectError state
       throw err;
     }
   };
@@ -152,7 +200,13 @@ export default function ResultPage() {
       <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
           {mainCards.map((product, idx) => (
-            <ProductCard key={`${product.product_name}-${idx}`} product={product} onReject={handleReject} />
+            <ProductCard
+              key={`${product.product_name}-${idx}`}
+              product={product}
+              onReject={handleReject}
+              isComparing={compareItems.some(c => c.product_name === product.product_name)}
+              onCompareToggle={handleCompareToggle}
+            />
           ))}
         </div>
 
@@ -169,7 +223,13 @@ export default function ResultPage() {
             {showLowConfidence && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 items-stretch">
                 {lowCards.map((product, idx) => (
-                  <ProductCard key={`${product.product_name}-low-${idx}`} product={product} onReject={handleReject} />
+                  <ProductCard
+                    key={`${product.product_name}-low-${idx}`}
+                    product={product}
+                    onReject={handleReject}
+                    isComparing={compareItems.some(c => c.product_name === product.product_name)}
+                    onCompareToggle={handleCompareToggle}
+                  />
                 ))}
               </div>
             )}
@@ -191,6 +251,77 @@ export default function ResultPage() {
             Refine for same person
           </button>
         </div>
+
+        {/* Save & Share row */}
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-2 mb-8">
+          {!saved ? (
+            !showSaveDialog ? (
+              <button
+                onClick={() => setShowSaveDialog(true)}
+                className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors"
+              >
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Save this person
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 animate-fade-in">
+                <input
+                  type="text"
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                  placeholder="Their name"
+                  className="h-9 px-3 rounded-lg border border-border bg-surface text-foreground text-sm w-40"
+                  autoFocus
+                />
+                <button
+                  onClick={() => {
+                    if (!saveName.trim()) return;
+                    saveProfile({
+                      name: saveName.trim(),
+                      relationship: formData.relationship,
+                      portrait: result.portrait || '',
+                      signals: formData.chatSignals || {},
+                      giftHistory: [],
+                    });
+                    setSaved(true);
+                    setShowSaveDialog(false);
+                  }}
+                  disabled={!saveName.trim()}
+                  className="h-9 px-4 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors disabled:opacity-50"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => setShowSaveDialog(false)}
+                  className="text-xs text-muted hover:text-foreground"
+                >
+                  Cancel
+                </button>
+              </div>
+            )
+          ) : (
+            <span className="flex items-center gap-2 text-sm text-success">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              Saved!
+            </span>
+          )}
+
+          {shareUrl && (
+            <button
+              onClick={handleShareSession}
+              className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors"
+            >
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+              {shareCopied ? 'Link copied!' : 'Share this list'}
+            </button>
+          )}
+        </div>
       </>
 
       <div className="flex flex-col sm:flex-row justify-center items-center gap-6 mt-4 pb-16">
@@ -202,12 +333,26 @@ export default function ResultPage() {
         </button>
         <div className="hidden sm:block w-1 h-1 rounded-full bg-border" />
         <button
+          onClick={() => router.push('/gift/people')}
+          className="text-sm font-medium text-muted hover:text-foreground transition-colors underline underline-offset-4"
+        >
+          Your People
+        </button>
+        <div className="hidden sm:block w-1 h-1 rounded-full bg-border" />
+        <button
           onClick={handleFeedback}
           className="text-sm font-medium text-muted hover:text-foreground transition-colors underline underline-offset-4"
         >
           Tell us how these landed
         </button>
       </div>
+
+      {/* Floating compare bar */}
+      <CompareBar
+        items={compareItems}
+        onRemove={handleCompareRemove}
+        onClear={() => setCompareItems([])}
+      />
     </div>
   );
 }

@@ -5,7 +5,6 @@ import type { GiftFormData } from '@/lib/types';
 const BASE_FORM: GiftFormData = {
   relationship: 'Close friend',
   recipientAge: '26–35',
-  recipientGender: 'Woman',
   occasion: 'Birthday',
   budget: ['₹3k–7.5k'],
   recipientCity: 'Mumbai',
@@ -14,7 +13,6 @@ const BASE_FORM: GiftFormData = {
   wishedFor: 'Always talks about wanting a nice knife set',
   personality: ['Creative', 'Foodie'],
   pastGiftResponse: ['Experiences (dining, travel, activities)'],
-  lifestyle: 'Very busy — always on the go',
   lifeStage: 'Starting something new (job, city, chapter)',
 };
 
@@ -59,7 +57,6 @@ describe('buildUserPrompt', () => {
       wishedFor: '',
       personality: [],
       pastGiftResponse: [],
-      lifestyle: '',
       lifeStage: '',
     };
     const prompt = buildUserPrompt(emptyForm);
@@ -71,7 +68,6 @@ describe('buildUserPrompt', () => {
       ...BASE_FORM,
       relationship: '',
       recipientAge: '',
-      recipientGender: '',
       occasion: '',
       budget: [],
     };
@@ -104,22 +100,6 @@ describe('buildUserPrompt', () => {
     expect(prompt).toContain('pottery class');
     expect(prompt).toContain('Keeps talking about wanting to learn pottery');
     expect(prompt).toContain('high');
-  });
-
-  test('includes Instagram signals block when provided', () => {
-    const form: GiftFormData = {
-      ...BASE_FORM,
-      instagramSignals: {
-        bio: 'Plant mom 🌿',
-        themes: ['plants', 'travel', 'food'],
-        hashtags: ['plantlover', 'wanderlust'],
-        confidence: 'medium',
-      },
-    };
-    const prompt = buildUserPrompt(form);
-    expect(prompt).toContain('INSTAGRAM');
-    expect(prompt).toContain('Plant mom');
-    expect(prompt).toContain('plants, travel, food');
   });
 
   test('ends with generation instruction', () => {

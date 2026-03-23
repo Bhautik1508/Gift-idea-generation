@@ -170,18 +170,6 @@ export function buildUserPrompt(data: GiftFormData): string {
     }
   }
 
-  // Append Instagram signals if available (Phase 3)
-  if (data.instagramSignals) {
-    const ig = data.instagramSignals;
-    parts.push(
-      '',
-      'SIGNALS FROM THEIR PUBLIC INSTAGRAM:',
-      `- Bio: ${ig.bio || 'None'}`,
-      `- Recurring themes in posts: ${ig.themes.join(', ') || 'None found'}`,
-      `- Hashtags they use: ${ig.hashtags.join(', ') || 'None found'}`,
-    );
-  }
-
   parts.push('', 'Generate the JSON output now.');
 
   return parts.join('\n');

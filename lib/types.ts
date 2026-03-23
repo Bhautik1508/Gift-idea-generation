@@ -14,7 +14,6 @@ export interface GiftFormData {
   lifeStage: string;
   giftIntent?: string;
   chatSignals?: ChatSignals;
-  instagramSignals?: InstagramSignals;
   selectedTerritoryTitle?: string;
 }
 
@@ -31,12 +30,6 @@ export interface ChatSignals {
   standout_signal: string;
 }
 
-export interface InstagramSignals {
-  bio: string;
-  themes: string[];
-  hashtags: string[];
-  confidence: 'high' | 'medium' | 'low';
-}
 
 // ─── LLM Output ─────────────────────────────────────────────
 

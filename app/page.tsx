@@ -47,16 +47,25 @@ export default function Home() {
         </p>
 
         {/* CTA */}
-        <Link
-          href="/gift/start"
-          id="cta-start"
-          className="inline-flex items-center justify-center h-14 px-10 bg-accent text-white text-lg font-medium rounded-full hover:bg-accent-hover transition-all duration-200 shadow-lg shadow-accent/20 hover:shadow-xl hover:shadow-accent/30 hover:-translate-y-0.5"
-        >
-          Find the perfect gift
-          <svg className="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </Link>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link
+            href="/gift/start"
+            id="cta-start"
+            className="inline-flex items-center justify-center h-14 px-10 bg-accent text-white text-lg font-medium rounded-full hover:bg-accent-hover transition-all duration-200 shadow-lg shadow-accent/20 hover:shadow-xl hover:shadow-accent/30 hover:-translate-y-0.5"
+          >
+            Find the perfect gift
+            <svg className="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </Link>
+          <Link
+            href="/gift/surprise"
+            id="cta-surprise"
+            className="inline-flex items-center justify-center h-14 px-10 border-2 border-accent/30 text-accent text-lg font-medium rounded-full hover:bg-accent/5 hover:border-accent/50 transition-all duration-200"
+          >
+            Surprise me ✨
+          </Link>
+        </div>
 
         {/* Trust signals */}
         <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-muted">
