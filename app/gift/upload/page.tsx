@@ -322,18 +322,18 @@ export default function UploadPage() {
           )}
 
           {/* Actions */}
-          <div className="flex gap-4 pt-4">
+          <div className="flex flex-wrap gap-3 pt-4">
             <button
               type="button"
               onClick={() => router.back()}
-              className="h-14 px-6 rounded-full border border-border text-foreground font-medium hover:bg-black/5 transition-colors cursor-pointer"
+              className="h-12 sm:h-14 px-4 sm:px-6 rounded-full border border-border text-foreground text-sm sm:text-base font-medium hover:bg-black/5 transition-colors cursor-pointer"
             >
               ← Back
             </button>
             <button
               type="button"
               onClick={handleSkip}
-              className="h-14 px-8 rounded-full border border-border text-foreground font-medium hover:bg-black/5 transition-colors cursor-pointer"
+              className="h-12 sm:h-14 px-4 sm:px-8 rounded-full border border-border text-foreground text-sm sm:text-base font-medium hover:bg-black/5 transition-colors cursor-pointer"
             >
               Skip this step
             </button>
@@ -341,7 +341,7 @@ export default function UploadPage() {
               type="button"
               disabled={!canExtract}
               onClick={handleExtract}
-              className={`flex-1 h-14 rounded-full font-medium text-lg transition-all ${
+              className={`w-full sm:flex-1 h-12 sm:h-14 rounded-full font-medium text-base sm:text-lg transition-all ${
                 canExtract
                   ? 'bg-accent text-white hover:bg-accent-hover shadow-md cursor-pointer'
                   : 'bg-muted/10 text-muted cursor-not-allowed'
@@ -457,18 +457,18 @@ export default function UploadPage() {
             Does this feel right? These signals will sharpen the recommendations.
           </p>
 
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               type="button"
               onClick={handleReUpload}
-              className="h-14 px-8 rounded-full border border-border text-foreground font-medium hover:bg-black/5 transition-colors cursor-pointer"
+              className="h-12 sm:h-14 px-6 sm:px-8 rounded-full border border-border text-foreground text-sm sm:text-base font-medium hover:bg-black/5 transition-colors cursor-pointer w-full sm:w-auto"
             >
               Try different chat
             </button>
             <button
               type="button"
               onClick={handleConfirm}
-              className="flex-1 h-14 rounded-full bg-accent text-white font-medium text-lg hover:bg-accent-hover shadow-md cursor-pointer transition-all"
+              className="flex-1 h-12 sm:h-14 rounded-full bg-accent text-white font-medium text-base sm:text-lg hover:bg-accent-hover shadow-md cursor-pointer transition-all"
             >
               Looks good — continue
             </button>
