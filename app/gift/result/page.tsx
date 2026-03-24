@@ -212,6 +212,7 @@ export default function ResultPage() {
   const totalCards = mainCards.length + lowCards.length;
 
   return (
+    <>
     <div className="animate-fade-in pb-16">
 
       {/* ── Save Banner (top, prominent) ── */}
@@ -413,13 +414,14 @@ export default function ResultPage() {
           Tell us how these landed
         </button>
       </div>
+    </div>
 
-      {/* Floating compare bar */}
+      {/* Floating compare bar — must be outside animate-fade-in div because transform breaks fixed positioning */}
       <CompareBar
         items={compareItems}
         onRemove={handleCompareRemove}
         onClear={() => setCompareItems([])}
       />
-    </div>
+    </>
   );
 }
