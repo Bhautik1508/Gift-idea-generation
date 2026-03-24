@@ -16,10 +16,18 @@ export default function CompareBar({ items, onRemove, onClear }: CompareBarProps
 
   return (
     <>
+      {/* Backdrop overlay when expanded */}
+      {expanded && (
+        <div
+          className="fixed inset-0 bg-black/30 z-40 animate-fade-in"
+          onClick={() => setExpanded(false)}
+        />
+      )}
+
       {/* Floating bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 animate-fade-in">
-        <div className="max-w-3xl mx-auto px-4 pb-4">
-          <div className="bg-surface border border-border rounded-2xl shadow-xl p-4">
+      <div className="fixed bottom-4 left-0 right-0 z-50 animate-fade-in pointer-events-none">
+        <div className="max-w-3xl mx-auto px-4 pointer-events-auto">
+          <div className="bg-surface border border-border rounded-2xl shadow-2xl p-4" style={{ boxShadow: '0 -4px 30px rgba(0,0,0,0.12), 0 4px 20px rgba(0,0,0,0.08)' }}>
             {!expanded ? (
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 overflow-x-auto">
@@ -71,7 +79,7 @@ export default function CompareBar({ items, onRemove, onClear }: CompareBarProps
                   </button>
                 </div>
 
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto max-h-[50vh] overflow-y-auto">
                   <table className="w-full text-sm border-collapse">
                     <thead>
                       <tr className="border-b border-border">
