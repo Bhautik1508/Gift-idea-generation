@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import PeopleShortcut from '@/components/PeopleShortcut';
 
 export default function Home() {
   return (
@@ -66,6 +67,9 @@ export default function Home() {
             Surprise me ✨
           </Link>
         </div>
+
+        {/* Returning users — saved people shortcut */}
+        <PeopleShortcut />
 
         {/* Trust signals */}
         <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-muted">

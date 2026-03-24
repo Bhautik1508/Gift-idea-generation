@@ -6,9 +6,10 @@ interface ProductCardProps {
   onReject?: (name: string, reason: string) => Promise<void>;
   isComparing?: boolean;
   onCompareToggle?: (product: GiftRecommendation) => void;
+  showCompareHint?: boolean;
 }
 
-export default function ProductCard({ product, onReject, isComparing, onCompareToggle }: ProductCardProps) {
+export default function ProductCard({ product, onReject, isComparing, onCompareToggle, showCompareHint }: ProductCardProps) {
   const [showRejectOptions, setShowRejectOptions] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
@@ -111,26 +112,33 @@ export default function ProductCard({ product, onReject, isComparing, onCompareT
           <span className={`px-3 py-1 text-xs font-semibold rounded-full ${categoryClass}`}>
             {product.category}
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative">
             {onCompareToggle && (
-              <button
-                onClick={() => onCompareToggle(product)}
-                className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-all ${
-                  isComparing
-                    ? 'bg-accent border-accent text-white'
-                    : 'border-border bg-surface text-muted hover:border-accent/50'
-                }`}
-                aria-label={isComparing ? 'Remove from comparison' : 'Add to comparison'}
-                title={isComparing ? 'Remove from comparison' : 'Compare'}
-              >
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  {isComparing ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              <>
+                <button
+                  onClick={() => onCompareToggle(product)}
+                  className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-all ${
+                    isComparing
+                      ? 'bg-accent border-accent text-white'
+                      : 'border-border bg-surface text-muted hover:border-accent/50'
+                  }`}
+                  aria-label={isComparing ? 'Remove from comparison' : 'Add to comparison'}
+                  title={isComparing ? 'Remove from comparison' : 'Compare'}
+                >
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    {isComparing ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   )}
                 </svg>
               </button>
+              {showCompareHint && (
+                <span className="absolute -bottom-8 right-0 whitespace-nowrap text-[10px] bg-foreground text-surface px-2.5 py-1 rounded-full shadow-lg animate-fade-in z-10">
+                  Tap to compare side by side
+                </span>
+              )}
+              </>
             )}
             <div className="flex items-center gap-1.5 px-2.5 py-1 bg-surface border border-border rounded-full">
               <div className={`w-2 h-2 rounded-full ${dotClass}`} />

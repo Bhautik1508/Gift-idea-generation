@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useGift } from '@/lib/GiftContext';
 import ProductCard from '@/components/ProductCard';
 import CompareBar from '@/components/CompareBar';
@@ -18,12 +19,32 @@ export default function ResultPage() {
   const [compareItems, setCompareItems] = useState<GiftRecommendation[]>([]);
   const [shareUrl, setShareUrl] = useState('');
   const [shareCopied, setShareCopied] = useState(false);
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  // Save banner state
+  const [showSaveBanner, setShowSaveBanner] = useState(true);
+  const [showSaveInput, setShowSaveInput] = useState(false);
   const [saveName, setSaveName] = useState('');
   const [saved, setSaved] = useState(false);
+  // Compare hint
+  const [showCompareHint, setShowCompareHint] = useState(false);
+  const [compareHintDismissed, setCompareHintDismissed] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
+    // Show compare hint once
+    if (typeof window !== 'undefined') {
+      const seen = localStorage.getItem('giftsense_compare_hint_seen');
+      if (!seen) {
+        setShowCompareHint(true);
+        const timer = setTimeout(() => {
+          setShowCompareHint(false);
+          setCompareHintDismissed(true);
+          localStorage.setItem('giftsense_compare_hint_seen', '1');
+        }, 4000);
+        return () => clearTimeout(timer);
+      } else {
+        setCompareHintDismissed(true);
+      }
+    }
   }, []);
 
   // Save session to sessionStorage for share links
@@ -63,10 +84,16 @@ export default function ResultPage() {
       if (exists) {
         return prev.filter(p => p.product_name !== product.product_name);
       }
-      if (prev.length >= 3) return prev; // Max 3
+      if (prev.length >= 3) return prev;
       return [...prev, product];
     });
-  }, []);
+    // Dismiss compare hint on first use
+    if (showCompareHint) {
+      setShowCompareHint(false);
+      setCompareHintDismissed(true);
+      localStorage.setItem('giftsense_compare_hint_seen', '1');
+    }
+  }, [showCompareHint]);
 
   const handleCompareRemove = useCallback((name: string) => {
     setCompareItems((prev) => prev.filter(p => p.product_name !== name));
@@ -130,6 +157,19 @@ export default function ResultPage() {
     router.push('/gift/feedback');
   };
 
+  const handleSave = () => {
+    if (!saveName.trim()) return;
+    saveProfile({
+      name: saveName.trim(),
+      relationship: formData.relationship,
+      portrait: result.portrait || '',
+      signals: formData.chatSignals || {},
+      giftHistory: [],
+    });
+    setSaved(true);
+    setShowSaveInput(false);
+  };
+
   const handleReject = async (productName: string, reason: string) => {
     if (!result || !result.recommendations) return;
     
@@ -169,12 +209,94 @@ export default function ResultPage() {
   });
   const mainCards = sorted.filter((r) => r.confidence !== 'low');
   const lowCards = sorted.filter((r) => r.confidence === 'low');
+  const totalCards = mainCards.length + lowCards.length;
 
   return (
     <div className="animate-fade-in pb-16">
 
+      {/* ── Save Banner (top, prominent) ── */}
+      {showSaveBanner && !saved && (
+        <div className="mb-8 bg-accent/5 border border-accent/15 rounded-2xl px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-fade-in">
+          {!showSaveInput ? (
+            <>
+              <p className="text-sm text-foreground/80">
+                Like these ideas?{' '}
+                <span className="font-medium text-foreground">Save {formData.relationship || 'them'}</span>{' '}
+                to gift them again later.
+              </p>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={() => setShowSaveInput(true)}
+                  className="h-8 px-4 rounded-full bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => setShowSaveBanner(false)}
+                  className="w-8 h-8 rounded-full text-muted hover:text-foreground hover:bg-black/5 flex items-center justify-center transition-colors"
+                  aria-label="Dismiss"
+                >
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-2 w-full animate-fade-in">
+              <input
+                type="text"
+                value={saveName}
+                onChange={(e) => setSaveName(e.target.value)}
+                placeholder="Their name"
+                className="h-9 px-3 rounded-lg border border-border bg-surface text-foreground text-sm flex-1 max-w-[200px]"
+                autoFocus
+                onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+              />
+              <button
+                onClick={handleSave}
+                disabled={!saveName.trim()}
+                className="h-9 px-4 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors disabled:opacity-50"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setShowSaveInput(false)}
+                className="text-xs text-muted hover:text-foreground"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Saved confirmation banner */}
+      {saved && showSaveBanner && (
+        <div className="mb-8 bg-success/10 border border-success/20 rounded-2xl px-5 py-4 flex items-center justify-between animate-fade-in">
+          <p className="text-sm text-foreground/80 flex items-center gap-2">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" className="text-success">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            Saved! View in{' '}
+            <Link href="/gift/people" className="font-medium text-accent hover:text-accent-hover underline underline-offset-2">
+              Your People
+            </Link>
+          </p>
+          <button
+            onClick={() => setShowSaveBanner(false)}
+            className="w-8 h-8 rounded-full text-muted hover:text-foreground hover:bg-black/5 flex items-center justify-center transition-colors"
+            aria-label="Dismiss"
+          >
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Context + intention header */}
-      <div className="mb-10 text-center space-y-3 max-w-2xl mx-auto">
+      <div className="mb-6 text-center space-y-3 max-w-2xl mx-auto">
         {/* Occasion · Relationship · City */}
         <p className="text-sm font-medium text-muted tracking-wide uppercase">
           {[formData.occasion, formData.relationship,
@@ -194,6 +316,13 @@ export default function ResultPage() {
             {result.gift_intention}
           </p>
         )}
+
+        {/* Compare instruction — visible when ≥4 cards and user hasn't compared yet */}
+        {totalCards >= 4 && compareItems.length === 0 && !compareHintDismissed && (
+          <p className="text-xs text-muted mt-2">
+            Tap the 📋 icon on any card to compare side by side.
+          </p>
+        )}
       </div>
 
       {/* Product Grid — sorted high > medium */}
@@ -206,6 +335,7 @@ export default function ResultPage() {
               onReject={handleReject}
               isComparing={compareItems.some(c => c.product_name === product.product_name)}
               onCompareToggle={handleCompareToggle}
+              showCompareHint={idx === 0 && showCompareHint}
             />
           ))}
         </div>
@@ -252,65 +382,9 @@ export default function ResultPage() {
           </button>
         </div>
 
-        {/* Save & Share row */}
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-2 mb-8">
-          {!saved ? (
-            !showSaveDialog ? (
-              <button
-                onClick={() => setShowSaveDialog(true)}
-                className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors"
-              >
-                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                Save this person
-              </button>
-            ) : (
-              <div className="flex items-center gap-2 animate-fade-in">
-                <input
-                  type="text"
-                  value={saveName}
-                  onChange={(e) => setSaveName(e.target.value)}
-                  placeholder="Their name"
-                  className="h-9 px-3 rounded-lg border border-border bg-surface text-foreground text-sm w-40"
-                  autoFocus
-                />
-                <button
-                  onClick={() => {
-                    if (!saveName.trim()) return;
-                    saveProfile({
-                      name: saveName.trim(),
-                      relationship: formData.relationship,
-                      portrait: result.portrait || '',
-                      signals: formData.chatSignals || {},
-                      giftHistory: [],
-                    });
-                    setSaved(true);
-                    setShowSaveDialog(false);
-                  }}
-                  disabled={!saveName.trim()}
-                  className="h-9 px-4 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors disabled:opacity-50"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => setShowSaveDialog(false)}
-                  className="text-xs text-muted hover:text-foreground"
-                >
-                  Cancel
-                </button>
-              </div>
-            )
-          ) : (
-            <span className="flex items-center gap-2 text-sm text-success">
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-              Saved!
-            </span>
-          )}
-
-          {shareUrl && (
+        {/* Share link */}
+        {shareUrl && (
+          <div className="flex justify-center mt-2 mb-8">
             <button
               onClick={handleShareSession}
               className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors"
@@ -320,8 +394,8 @@ export default function ResultPage() {
               </svg>
               {shareCopied ? 'Link copied!' : 'Share this list'}
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </>
 
       <div className="flex flex-col sm:flex-row justify-center items-center gap-6 mt-4 pb-16">
@@ -330,13 +404,6 @@ export default function ResultPage() {
           className="text-sm font-medium text-muted hover:text-foreground transition-colors underline underline-offset-4"
         >
           Start over for someone else
-        </button>
-        <div className="hidden sm:block w-1 h-1 rounded-full bg-border" />
-        <button
-          onClick={() => router.push('/gift/people')}
-          className="text-sm font-medium text-muted hover:text-foreground transition-colors underline underline-offset-4"
-        >
-          Your People
         </button>
         <div className="hidden sm:block w-1 h-1 rounded-full bg-border" />
         <button
