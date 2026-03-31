@@ -15,6 +15,9 @@ export interface GiftFormData {
   giftIntent?: string;
   chatSignals?: ChatSignals;
   selectedTerritoryTitle?: string;
+  // Phase 22: Saved profile context for Gift Again flow
+  previousPortrait?: string;
+  previousGiftHistory?: GiftHistoryEntry[];
 }
 
 // ─── Signal Extraction (Phase 2+) ───────────────────────────

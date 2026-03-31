@@ -29,7 +29,11 @@ export default function PeopleShortcut() {
 
   const handleClick = (profile: RecipientProfile) => {
     resetAll();
-    updateFormData({ relationship: profile.relationship });
+    updateFormData({
+      relationship: profile.relationship,
+      previousPortrait: profile.portrait || undefined,
+      previousGiftHistory: profile.giftHistory?.length > 0 ? profile.giftHistory : undefined,
+    });
     if (profile.signals && Object.keys(profile.signals).length > 0) {
       setChatSignals(profile.signals as ChatSignals);
     }

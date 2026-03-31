@@ -102,8 +102,82 @@ describe('buildUserPrompt', () => {
     expect(prompt).toContain('high');
   });
 
+  test('includes frustrations from chat signals', () => {
+    const form: GiftFormData = {
+      ...BASE_FORM,
+      chatSignals: {
+        expressed_desires: [],
+        frustrations: ['bad sleep', 'noisy neighbours'],
+        excitement_signals: [],
+        life_context: '',
+        aesthetic_signals: [],
+        gift_history_hints: [],
+        confidence: 'medium',
+        standout_signal: '',
+      },
+    };
+    const prompt = buildUserPrompt(form);
+    expect(prompt).toContain('Frustrated by:');
+    expect(prompt).toContain('bad sleep');
+    expect(prompt).toContain('noisy neighbours');
+  });
+
+  test('includes previous portrait when provided', () => {
+    const form: GiftFormData = {
+      ...BASE_FORM,
+      previousPortrait: 'We think she is a creative soul who recently transitioned to a startup role.',
+    };
+    const prompt = buildUserPrompt(form);
+    expect(prompt).toContain('RETURNING RECIPIENT');
+    expect(prompt).toContain('creative soul');
+    expect(prompt).toContain('Build on this understanding');
+  });
+
+  test('does NOT include portrait section when not provided', () => {
+    const prompt = buildUserPrompt(BASE_FORM);
+    expect(prompt).not.toContain('RETURNING RECIPIENT');
+  });
+
+  test('includes past gift history when provided', () => {
+    const form: GiftFormData = {
+      ...BASE_FORM,
+      previousGiftHistory: [
+        { occasion: 'Birthday', directionChosen: 'Creative experience', whatWasGiven: 'Pottery class', landed: 'well', date: '2025-06-01', notes: 'She loved it' },
+        { occasion: 'Diwali', directionChosen: 'Premium consumable', whatWasGiven: 'Artisan chocolates', landed: 'missed', date: '2025-10-20', notes: '' },
+      ],
+    };
+    const prompt = buildUserPrompt(form);
+    expect(prompt).toContain('PAST GIFT HISTORY');
+    expect(prompt).toContain('Pottery class');
+    expect(prompt).toContain('landed: well');
+    expect(prompt).toContain('landed: missed');
+    expect(prompt).toContain('Avoid repeating categories that landed poorly');
+  });
+
+  test('does NOT include gift history section when empty', () => {
+    const prompt = buildUserPrompt(BASE_FORM);
+    expect(prompt).not.toContain('PAST GIFT HISTORY');
+  });
+
   test('ends with generation instruction', () => {
     const prompt = buildUserPrompt(BASE_FORM);
     expect(prompt).toContain('Generate the JSON output now.');
+  });
+});
+
+describe('SYSTEM_PROMPT — Phase 22 rules', () => {
+  test('contains frustration signal rules', () => {
+    expect(SYSTEM_PROMPT).toContain('FRUSTRATION SIGNALS');
+    expect(SYSTEM_PROMPT).toContain('anti-signals');
+  });
+
+  test('contains previous portrait rules', () => {
+    expect(SYSTEM_PROMPT).toContain('PREVIOUS PORTRAIT');
+    expect(SYSTEM_PROMPT).toContain('do not start from scratch');
+  });
+
+  test('contains past gift history rules', () => {
+    expect(SYSTEM_PROMPT).toContain('PAST GIFT HISTORY');
+    expect(SYSTEM_PROMPT).toContain('landed: missed');
   });
 });

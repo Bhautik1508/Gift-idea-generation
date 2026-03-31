@@ -1,4 +1,5 @@
 import type { GiftFormData } from '../types';
+import { expandWishedFor, expandPastGiftResponses } from './signalExpansion';
 
 // ─── System prompt ──────────────────────────────────────────
 
@@ -125,7 +126,51 @@ If giftIntent is specified, let it shape the emotional register of ALL recommend
 
 AESTHETIC AND HISTORY SIGNALS:
 - If aesthetic_signals are provided from chat analysis, use them to filter style — e.g. if the recipient's aesthetic is 'minimalist', avoid ornate or maximalist gifts.
-- If gift_history_hints are provided, avoid repeating past gift categories. Use them to identify gaps — if they've received kitchen items before, explore a different territory.`;
+- If gift_history_hints are provided, avoid repeating past gift categories. Use them to identify gaps — if they've received kitchen items before, explore a different territory.
+
+FRUSTRATION SIGNALS:
+Frustrations are anti-signals — they tell you what to AVOID. If the recipient has expressed frustrations (from chat analysis), use them as negative filters:
+- If they complain about bad sleep → suggest a sleep-improvement gift (weighted blanket, sleep mask, better pillow)
+- If they hate cooking → do NOT suggest a cooking class or kitchen gadget
+- If they're frustrated by clutter → do NOT suggest physical objects; lean toward experiences or consumables
+- If they're stressed about money → avoid luxury or premium gifts; prioritise practical-but-thoughtful
+Frustrations can also be INVERTED into gift opportunities: frustration with bad coffee → premium coffee equipment; frustration with messy desk → desk organiser set.
+
+PREVIOUS PORTRAIT:
+If a previous portrait of this person is provided, it means you have gifted them before. Build on the existing understanding — do not start from scratch. Use it to deepen your insights, identify what has changed since, and avoid restating what is already known. Factor in any new signals on top.
+
+PAST GIFT HISTORY:
+If past gift history entries are provided (with occasion, direction chosen, and how they landed):
+- NEVER repeat a gift category that 'landed: missed' — the recipient clearly did not appreciate it
+- For gifts that 'landed: ok', explore adjacent but different territories
+- For gifts that 'landed: well', explore the SAME emotional territory but with a fresh angle — if they loved a cooking experience, try a food-related product or a different cuisine class
+- Reference specific past successes in your why_it_fits reasoning to show continuity
+
+INTEREST DEPTH MAPPING:
+When interests are mentioned, think TWO levels deep. Not 'cricket → sports gift' but 'cricket → what SPECIFIC cricket product would they love?' Examples:
+- "cricket" → bat, gloves, jersey, match tickets, cricket coaching camp, sports memorabilia, cricket book
+- "cooking" → premium spice box, cookbook by Indian chef, cast iron tawa, molecular gastronomy kit, cooking class voucher, knife set
+- "travel" → packing cubes, neck pillow, travel journal, scratch-off world map, camera accessories, Airbnb voucher, passport holder
+- "photography" → camera strap, lens cleaning kit, photo printing subscription, tripod, photography workshop, photo book
+- "yoga" → premium yoga mat, yoga block set, meditation cushion, yoga retreat voucher, yoga book, essential oil set
+- "music" → vinyl record, Bluetooth speaker, concert tickets, guitar picks, music subscription, instrument accessories
+Always go from the interest to SPECIFIC, BUYABLE products — not abstract categories.
+
+PERSONALITY STYLE MAPPING:
+Use personality traits to FILTER the style and tone of recommendations:
+- "Minimalist" → prefer clean, functional, unbranded items; avoid ornate, maximalist, or cluttered gifts
+- "Creative" → prefer art supplies, DIY kits, experience workshops, maker tools; avoid pre-made or generic items
+- "Foodie" → prefer premium ingredients, cooking tools, dining experiences, artisanal items; avoid generic food hampers or mass-market chocolates
+- "Tech enthusiast" → prefer latest gadgets, smart home, app subscriptions, desk tech; avoid analog or traditional
+- "Adventurous" → prefer experience vouchers, outdoor gear, travel accessories; avoid home-bound or sedentary gifts
+- "Homebody" → prefer cozy home items, streaming subscriptions, comfort food, indoor hobbies; avoid outdoor or travel gifts
+- "Nature lover" → prefer plants, gardening tools, outdoor experiences, eco-friendly products; avoid synthetic or tech-heavy
+- "Wellness-focused" → prefer self-care, mindfulness tools, fitness accessories, organic products; avoid indulgent or unhealthy
+- "Practical" → prefer useful everyday items, quality upgrades to things they already use; avoid decorative or novelty items
+- "Social butterfly" → prefer group experiences, party accessories, hosting tools, shared activities; avoid solo or introspective gifts
+
+EXPANDED SIGNALS:
+If expanded wish interpretations or expanded past gift preferences are provided in the user prompt, treat them as HIGH-PRIORITY seed products. At least 30% of your recommendations should draw from or be inspired by these expanded product lists. They represent what the giver is likely imagining when they say a broad term like 'personalised' or 'tech'.`;
 
 // ─── User prompt builder ────────────────────────────────────
 
@@ -150,6 +195,22 @@ export function buildUserPrompt(data: GiftFormData): string {
     `- City (for local experiences): ${data.recipientCity || 'Not specified'}`,
   ];
 
+  // Phase 23: Expand wishedFor keywords into specific product ideas
+  const wishExpansion = expandWishedFor(data.wishedFor);
+  if (wishExpansion) {
+    parts.push(`  → Expanded wish interpretation: ${wishExpansion}`);
+  }
+
+  // Phase 23: Expand pastGiftResponse into specific product examples
+  const pastGiftExpansion = expandPastGiftResponses(data.pastGiftResponse);
+  if (pastGiftExpansion) {
+    parts.push(
+      '',
+      'EXPANDED PAST GIFT PREFERENCES (specific products they tend to like):',
+      `  ${pastGiftExpansion}`,
+    );
+  }
+
   // Append chat signals if available (Phase 2)
   if (data.chatSignals) {
     const cs = data.chatSignals;
@@ -158,6 +219,7 @@ export function buildUserPrompt(data: GiftFormData): string {
       'SIGNALS FROM THEIR WHATSAPP CONVERSATION:',
       `- Expressed desires: ${cs.expressed_desires.join(', ') || 'None found'}`,
       `- Current excitement: ${cs.excitement_signals.join(', ') || 'None found'}`,
+      `- Frustrated by: ${cs.frustrations?.join(', ') || 'None found'}`,
       `- Life context from chat: ${cs.life_context || 'Not clear'}`,
       `- Standout signal: ${cs.standout_signal || 'None'}`,
       `- Signal confidence: ${cs.confidence}`,
@@ -168,6 +230,31 @@ export function buildUserPrompt(data: GiftFormData): string {
     if (cs.gift_history_hints && cs.gift_history_hints.length > 0) {
       parts.push(`- Gift history hints: ${cs.gift_history_hints.join(', ')}`);
     }
+  }
+
+  // Phase 22: Inject previous portrait from saved profile
+  if (data.previousPortrait) {
+    parts.push(
+      '',
+      'RETURNING RECIPIENT — PREVIOUS PORTRAIT:',
+      `You have analysed this person before and described them as:`,
+      `"${data.previousPortrait}"`,
+      `Build on this understanding. Note what may have changed since.`,
+    );
+  }
+
+  // Phase 22: Inject past gift history from saved profile
+  if (data.previousGiftHistory && data.previousGiftHistory.length > 0) {
+    parts.push(
+      '',
+      'PAST GIFT HISTORY FOR THIS PERSON:',
+    );
+    for (const entry of data.previousGiftHistory) {
+      parts.push(
+        `- ${entry.occasion}: gave "${entry.directionChosen}" (${entry.whatWasGiven}) — landed: ${entry.landed}${entry.notes ? ` (${entry.notes})` : ''}`
+      );
+    }
+    parts.push('Avoid repeating categories that landed poorly. Build on what worked.');
   }
 
   parts.push('', 'Generate the JSON output now.');

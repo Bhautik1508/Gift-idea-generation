@@ -20,6 +20,9 @@ export default function PeoplePage() {
     resetAll();
     updateFormData({
       relationship: profile.relationship,
+      // Phase 22: Inject saved profile context for better recs
+      previousPortrait: profile.portrait || undefined,
+      previousGiftHistory: profile.giftHistory?.length > 0 ? profile.giftHistory : undefined,
     });
     // Restore saved chat signals if available
     if (profile.signals && Object.keys(profile.signals).length > 0) {
