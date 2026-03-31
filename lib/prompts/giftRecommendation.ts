@@ -1,5 +1,6 @@
 import type { GiftFormData } from '../types';
 import { expandWishedFor, expandPastGiftResponses } from './signalExpansion';
+import { selectSeedProducts } from './giftTaxonomy';
 
 // ─── System prompt ──────────────────────────────────────────
 
@@ -193,7 +194,36 @@ Use personality traits to FILTER the style and tone of recommendations:
 - "Social butterfly" → prefer group experiences, party accessories, hosting tools, shared activities; avoid solo or introspective gifts
 
 EXPANDED SIGNALS:
-If expanded wish interpretations or expanded past gift preferences are provided in the user prompt, treat them as HIGH-PRIORITY seed products. At least 30% of your recommendations should draw from or be inspired by these expanded product lists. They represent what the giver is likely imagining when they say a broad term like 'personalised' or 'tech'.`;
+If expanded wish interpretations or expanded past gift preferences are provided in the user prompt, treat them as HIGH-PRIORITY seed products. At least 30% of your recommendations should draw from or be inspired by these expanded product lists. They represent what the giver is likely imagining when they say a broad term like 'personalised' or 'tech'.
+
+SPECIFICITY CHECK (MANDATORY):
+Before finalising EVERY recommendation, apply this test:
+- Every product_name must be specific enough that someone could search for it on Amazon India or Google and find a real product within 2 clicks.
+  BAD: 'A creative experience' — too vague, not searchable
+  BAD: 'Premium gadget' — meaningless, not actionable
+  GOOD: 'Beginner pottery workshop voucher' — specific, searchable
+  GOOD: 'Pour-over coffee maker set (V60 style)' — specific, buyable
+  GOOD: 'Watercolour paint set with 36 shades' — specific, searchable
+- If you generate search_keywords, they must return real, buyable results on Amazon.in, Flipkart, or Google Shopping India.
+- The tagline must start with a verb and be 6–10 words. It should tell the giver WHY this is right.
+
+FEW-SHOT QUALITY EXAMPLES:
+Here are examples showing the QUALITY BAR for recommendations. Study the difference between generic and GiftSense-quality:
+
+Example 1 — High-signal input:
+Input: interests='bouldering and rock climbing', wishedFor='a good chalk bag', budget='₹1.5k–3k'
+GENERIC (reject this): { product_name: 'Sports equipment', why_it_fits: 'They like fitness' }
+GIFTSENSE QUALITY: { product_name: 'Rock climbing chalk bag with zip pocket', category: 'Product', tagline: 'Gear up her send sessions at the crag', why_it_fits: 'She specifically mentioned wanting a chalk bag for bouldering — this is a direct wish fulfilment with a practical zip pocket for keys.', price_range: '₹1,200–2,500', confidence: 'high', search_keywords: 'climbing chalk bag India zip pocket' }
+
+Example 2 — Low-signal, safe context:
+Input: relationship='Colleague', occasion='Birthday', budget='₹1.5k–3k', personality=['Practical']
+GENERIC (reject this): { product_name: 'Gift card', why_it_fits: 'Everyone likes gift cards' }
+GIFTSENSE QUALITY: { product_name: 'Premium desk organiser with wireless charging pad', category: 'Product', tagline: 'Upgrade their workspace without overstepping', why_it_fits: 'For a practical colleague, a quality desk accessory is thoughtful yet safe — useful daily without being too personal.', price_range: '₹2,000–3,500', confidence: 'medium', search_keywords: 'desk organiser wireless charger India premium' }
+
+Example 3 — Personalised preference:
+Input: pastGiftResponse=['Personalised / sentimental things'], occasion='Anniversary', budget='₹3k–7.5k'
+GENERIC (reject this): { product_name: 'Personalised gift', why_it_fits: 'They like personalised things' }
+GIFTSENSE QUALITY: { product_name: 'Custom night sky star map of your anniversary date', category: 'Wildcard', tagline: 'Frame the exact sky from the night you began', why_it_fits: 'They respond well to sentimental gifts, and a star map of their anniversary date combines personalisation with romantic meaning — frameable and lasting.', price_range: '₹2,000–3,500', confidence: 'high', search_keywords: 'custom star map India anniversary date print' }`;
 
 // ─── User prompt builder ────────────────────────────────────
 
@@ -232,6 +262,12 @@ export function buildUserPrompt(data: GiftFormData): string {
       'EXPANDED PAST GIFT PREFERENCES (specific products they tend to like):',
       `  ${pastGiftExpansion}`,
     );
+  }
+
+  // Phase 24: Inject seed products from taxonomy
+  const seeds = selectSeedProducts(data);
+  if (seeds) {
+    parts.push('', seeds);
   }
 
   // Append chat signals if available (Phase 2)
