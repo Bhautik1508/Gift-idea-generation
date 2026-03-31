@@ -4,11 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGift } from '@/lib/GiftContext';
 import { getProfiles, deleteProfile } from '@/lib/profiles';
-import type { RecipientProfile } from '@/lib/types';
+import type { RecipientProfile, ChatSignals } from '@/lib/types';
 
 export default function PeoplePage() {
   const router = useRouter();
-  const { updateFormData, resetAll } = useGift();
+  const { updateFormData, resetAll, setChatSignals } = useGift();
   const [profiles, setProfiles] = useState<RecipientProfile[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
@@ -21,6 +21,10 @@ export default function PeoplePage() {
     updateFormData({
       relationship: profile.relationship,
     });
+    // Restore saved chat signals if available
+    if (profile.signals && Object.keys(profile.signals).length > 0) {
+      setChatSignals(profile.signals as ChatSignals);
+    }
     router.push('/gift/start');
   };
 

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getProfiles } from '@/lib/profiles';
 import { useGift } from '@/lib/GiftContext';
-import type { RecipientProfile } from '@/lib/types';
+import type { RecipientProfile, ChatSignals } from '@/lib/types';
 
 const COLORS = [
   'bg-blue-100 text-blue-700',
@@ -18,7 +18,7 @@ const COLORS = [
 export default function PeopleShortcut() {
   const [profiles, setProfiles] = useState<RecipientProfile[]>([]);
   const router = useRouter();
-  const { resetAll, updateFormData } = useGift();
+  const { resetAll, updateFormData, setChatSignals } = useGift();
 
   useEffect(() => {
     const all = getProfiles();
@@ -30,6 +30,9 @@ export default function PeopleShortcut() {
   const handleClick = (profile: RecipientProfile) => {
     resetAll();
     updateFormData({ relationship: profile.relationship });
+    if (profile.signals && Object.keys(profile.signals).length > 0) {
+      setChatSignals(profile.signals as ChatSignals);
+    }
     router.push('/gift/start');
   };
 
