@@ -3,12 +3,14 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGift } from '@/lib/GiftContext';
+import { postProcessRecommendations } from '@/lib/postProcess';
 
 const TIMEOUT_MS = 30_000; // 30 seconds
 
 export default function ThinkingPage() {
   const router = useRouter();
   const { formData, setResult, isLoading, setIsLoading } = useGift();
+
   const [messageIndex, setMessageIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [timedOut, setTimedOut] = useState(false);
@@ -78,7 +80,9 @@ export default function ThinkingPage() {
 
         const data = await response.json();
 
-        setResult(data);
+        // Phase 25: Post-process (re-rank, dedup, budget check, signal attribution)
+        const processed = postProcessRecommendations(data, formData);
+        setResult(processed);
         setIsLoading(false);
         router.push('/gift/result');
 

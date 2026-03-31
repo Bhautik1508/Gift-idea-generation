@@ -109,9 +109,20 @@ export default function ProductCard({ product, onReject, isComparing, onCompareT
       <div className="p-6 flex-grow flex flex-col">
         {/* 1. Top bar — fixed height */}
         <div className="flex justify-between items-start mb-4">
-          <span className={`px-3 py-1 text-xs font-semibold rounded-full ${categoryClass}`}>
-            {product.category}
-          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${categoryClass}`}>
+              {product.category}
+            </span>
+            {product.signal_source && (
+              <span className="px-2.5 py-1 text-[10px] font-medium rounded-full bg-teal-50 text-teal-700 border border-teal-200 flex items-center gap-1">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                {product.signal_source}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-2 relative">
             {onCompareToggle && (
               <>

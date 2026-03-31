@@ -47,6 +47,8 @@ export interface GiftRecommendation {
   search_keywords: string;
   relevance_signal: string;
   social_note: string | null;
+  // Phase 25: Post-processing signal attribution
+  signal_source?: string | null;
 }
 
 export interface GiftTerritory {
