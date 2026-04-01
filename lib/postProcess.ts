@@ -37,6 +37,16 @@ export function attributeSignal(
   // Priority 2: chat signals (standout_signal, expressed_desires)
   if (data.chatSignals) {
     const cs = data.chatSignals;
+    // Common words that appear in almost every recommendation — skip these
+    const chatStopWords = new Set([
+      'want', 'wants', 'like', 'likes', 'love', 'loves', 'need', 'needs',
+      'good', 'nice', 'great', 'best', 'new', 'really', 'something',
+      'thing', 'things', 'very', 'also', 'been', 'have', 'has', 'will',
+      'would', 'could', 'should', 'just', 'more', 'most', 'some', 'them',
+      'their', 'they', 'that', 'this', 'with', 'from', 'about', 'into',
+      'gift', 'gifts', 'give', 'gave', 'gets', 'getting',
+    ]);
+
     const chatTerms = [
       cs.standout_signal || '',
       ...(cs.expressed_desires || []),
@@ -44,8 +54,19 @@ export function attributeSignal(
     ].filter(Boolean).map(s => s.toLowerCase());
 
     for (const term of chatTerms) {
-      const termWords = term.split(/[\s,;.]+/).filter(w => w.length > 2);
-      if (termWords.some(w => text.includes(w))) {
+      // First try matching the full term as a substring (most reliable)
+      if (term.length > 5 && text.includes(term)) {
+        return 'Based on chat signals';
+      }
+      // Otherwise require ≥2 significant word matches (4+ chars, no stop words)
+      const termWords = term.split(/[\s,;.]+/).filter(
+        (w: string) => w.length >= 4 && !chatStopWords.has(w)
+      );
+      const matchCount = termWords.filter((w: string) => text.includes(w)).length;
+      if (termWords.length >= 2 && matchCount >= 2) {
+        return 'Based on chat signals';
+      }
+      if (termWords.length === 1 && matchCount === 1) {
         return 'Based on chat signals';
       }
     }
