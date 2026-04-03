@@ -85,6 +85,16 @@ export interface RecipientProfile {
   portrait: string;
   signals: Partial<ChatSignals>;
   giftHistory: GiftHistoryEntry[];
+  // About-page fields (saved for Gift Again pre-fill)
+  recipientAge?: string;
+  recipientCity?: string;
+  recentChanges?: string;
+  interests?: string;
+  wishedFor?: string;
+  personality?: string[];
+  pastGiftResponse?: string[];
+  lifeStage?: string;
+  giftIntent?: string;
 }
 
 // ─── Constants ──────────────────────────────────────────────

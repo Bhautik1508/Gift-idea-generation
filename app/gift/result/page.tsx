@@ -165,6 +165,16 @@ export default function ResultPage() {
       portrait: result.portrait || '',
       signals: formData.chatSignals || {},
       giftHistory: [],
+      // Save about-page fields for pre-fill on Gift Again
+      recipientAge: formData.recipientAge || undefined,
+      recipientCity: formData.recipientCity || undefined,
+      recentChanges: formData.recentChanges || undefined,
+      interests: formData.interests || undefined,
+      wishedFor: formData.wishedFor || undefined,
+      personality: formData.personality?.length > 0 ? formData.personality : undefined,
+      pastGiftResponse: formData.pastGiftResponse?.length > 0 ? formData.pastGiftResponse : undefined,
+      lifeStage: formData.lifeStage || undefined,
+      giftIntent: formData.giftIntent || undefined,
     });
     setSaved(true);
     setShowSaveInput(false);

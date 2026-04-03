@@ -33,6 +33,16 @@ export default function PeopleShortcut() {
       relationship: profile.relationship,
       previousPortrait: profile.portrait || undefined,
       previousGiftHistory: profile.giftHistory?.length > 0 ? profile.giftHistory : undefined,
+      // Restore about-page fields
+      recipientAge: profile.recipientAge || '',
+      recipientCity: profile.recipientCity || '',
+      recentChanges: profile.recentChanges || '',
+      interests: profile.interests || '',
+      wishedFor: profile.wishedFor || '',
+      personality: profile.personality || [],
+      pastGiftResponse: profile.pastGiftResponse || [],
+      lifeStage: profile.lifeStage || '',
+      giftIntent: profile.giftIntent || undefined,
     });
     if (profile.signals && Object.keys(profile.signals).length > 0) {
       setChatSignals(profile.signals as ChatSignals);

@@ -23,6 +23,16 @@ export default function PeoplePage() {
       // Phase 22: Inject saved profile context for better recs
       previousPortrait: profile.portrait || undefined,
       previousGiftHistory: profile.giftHistory?.length > 0 ? profile.giftHistory : undefined,
+      // Restore about-page fields
+      recipientAge: profile.recipientAge || '',
+      recipientCity: profile.recipientCity || '',
+      recentChanges: profile.recentChanges || '',
+      interests: profile.interests || '',
+      wishedFor: profile.wishedFor || '',
+      personality: profile.personality || [],
+      pastGiftResponse: profile.pastGiftResponse || [],
+      lifeStage: profile.lifeStage || '',
+      giftIntent: profile.giftIntent || undefined,
     });
     // Restore saved chat signals if available
     if (profile.signals && Object.keys(profile.signals).length > 0) {
