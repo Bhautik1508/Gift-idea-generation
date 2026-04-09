@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { GiftProvider } from "@/lib/GiftContext";
-import { Analytics } from "@vercel/analytics/react";
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -34,7 +33,6 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         <GiftProvider>{children}</GiftProvider>
-        <Analytics />
       </body>
     </html>
   );
