@@ -86,11 +86,13 @@ export async function POST(req: Request) {
           return result;
         } catch (e: any) {
           lastError = e;
-          if (e.status === 429 || e.message?.includes('429') || e.message?.includes('Quota') || e.message?.includes('limit')) {
-            console.warn(`Quota exceeded for ${modelName}. Trying next model...`);
+          const msg = e.message || '';
+          if (e.status === 429 || msg.includes('429') || msg.includes('Quota') || msg.includes('limit') ||
+              e.status === 503 || msg.includes('503') || msg.includes('Service Unavailable') || msg.includes('high demand') || msg.includes('overloaded')) {
+            console.warn(`Model ${modelName} unavailable (quota/demand). Trying next model...`);
             continue;
           }
-          if (e.message?.includes('timed out')) {
+          if (msg.includes('timed out')) {
             console.warn(`${modelName} timed out. Trying next model...`);
             continue;
           }
