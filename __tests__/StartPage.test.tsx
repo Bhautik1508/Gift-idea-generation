@@ -7,6 +7,9 @@ import { useRouter } from 'next/navigation';
 // Mock useRouter
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
+  useSearchParams: jest.fn(() => ({
+    get: jest.fn(() => null),
+  })),
 }));
 
 describe('StartPage', () => {

@@ -7,6 +7,7 @@ import JSZip from 'jszip';
 import type { ChatSignals } from '@/lib/types';
 import { parseWhatsAppChat, extractSenders } from '@/lib/chatParser';
 import ProgressBar from '@/components/ProgressBar';
+import { trackEvent } from '@/lib/analytics';
 
 const ACCEPTED_EXTENSIONS = ['.txt', '.zip'];
 
@@ -118,10 +119,12 @@ export default function UploadPage() {
     if (signals) {
       setChatSignals(signals);
     }
+    trackEvent('step_complete_upload', { chat_uploaded: true });
     router.push('/gift/thinking');
   };
 
   const handleSkip = () => {
+    trackEvent('step_complete_upload', { chat_uploaded: false });
     router.push('/gift/thinking');
   };
 

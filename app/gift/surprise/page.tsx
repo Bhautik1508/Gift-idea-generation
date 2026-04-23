@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useGift } from '@/lib/GiftContext';
 import QuestionCard from '@/components/QuestionCard';
 import { RELATIONSHIPS, OCCASIONS, BUDGETS } from '@/lib/types';
+import { trackEvent } from '@/lib/analytics';
 
 export default function SurpriseMePage() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function SurpriseMePage() {
     // Reset form data when entering surprise me flow
     resetAll();
     window.scrollTo({ top: 0, behavior: 'instant' });
+    trackEvent('flow_start', { source: 'surprise' });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isComplete =

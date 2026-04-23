@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useGift } from '@/lib/GiftContext';
 import ProgressBar from '@/components/ProgressBar';
 import QuestionCard from '@/components/QuestionCard';
+import { trackEvent } from '@/lib/analytics';
 
 const PERSONALITIES = [
   'Homebody', 'Adventurous', 'Creative', 'Practical', 'Social butterfly',
@@ -56,6 +57,11 @@ export default function AboutPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isComplete) {
+      trackEvent('step_complete_about', {
+        personality_count: formData.personality.length,
+        has_interests: formData.interests.trim().length > 0,
+        has_wished: formData.wishedFor.trim().length > 0,
+      });
       router.push('/gift/upload');
     }
   };

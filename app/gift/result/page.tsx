@@ -8,6 +8,7 @@ import ProductCard from '@/components/ProductCard';
 import CompareBar from '@/components/CompareBar';
 import { saveProfile } from '@/lib/profiles';
 import type { GiftRecommendation } from '@/lib/types';
+import { trackEvent } from '@/lib/analytics';
 
 const CONFIDENCE_ORDER = { high: 0, medium: 1, low: 2 } as const;
 
@@ -30,6 +31,20 @@ export default function ResultPage() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
+
+    // Track results viewed
+    if (result && result.recommendations?.length > 0) {
+      trackEvent('results_viewed', {
+        card_count: result.recommendations.length,
+        confidence_overall: result.confidence_overall || 'unknown',
+      });
+    }
+
+    // Dynamic page title for SEO
+    if (formData.relationship) {
+      document.title = `Gift Ideas for ${formData.relationship} | GiftSense`;
+    }
+
     // Show compare hint once
     if (typeof window !== 'undefined') {
       const seen = localStorage.getItem('giftsense_compare_hint_seen');
@@ -128,6 +143,7 @@ export default function ResultPage() {
   }
 
   const handleStartOver = () => {
+    trackEvent('start_over', {});
     resetAll();
     router.push('/');
   };
@@ -140,6 +156,7 @@ export default function ResultPage() {
     
     const text = `Gift Ideas for my ${formData.relationship}:\n\n${items}`;
     navigator.clipboard.writeText(text).then(() => {
+      trackEvent('copy_all_ideas', { card_count: result.recommendations.length });
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
@@ -148,6 +165,7 @@ export default function ResultPage() {
   const handleShareSession = () => {
     if (!shareUrl) return;
     navigator.clipboard.writeText(shareUrl).then(() => {
+      trackEvent('share_session', {});
       setShareCopied(true);
       setTimeout(() => setShareCopied(false), 2500);
     });
@@ -386,7 +404,7 @@ export default function ResultPage() {
             {copied ? 'Copied to clipboard! ✓' : 'Copy all ideas'}
           </button>
           <button
-            onClick={() => router.push('/gift/about')}
+            onClick={() => { trackEvent('refine_same_person', {}); router.push('/gift/about'); }}
             className="h-12 px-8 rounded-full bg-accent text-white font-medium hover:bg-accent-hover transition-all shadow-md w-full sm:w-auto"
           >
             Refine for same person

@@ -1,11 +1,12 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useGift } from '@/lib/GiftContext';
 import ProgressBar from '@/components/ProgressBar';
 import QuestionCard from '@/components/QuestionCard';
 import { RELATIONSHIPS, OCCASIONS, BUDGETS } from '@/lib/types';
+import { trackEvent } from '@/lib/analytics';
 
 const AGES = ['Under 18', '18–25', '26–35', '36–50', '51–65', '65+'];
 const CITIES = [
@@ -16,11 +17,19 @@ const CITIES = [
 
 export default function StartPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { formData, updateFormData } = useGift();
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
-  }, []);
+    trackEvent('flow_start', { source: 'main' });
+
+    // Pre-fill occasion from search params (occasion landing pages)
+    const prefilledOccasion = searchParams.get('occasion');
+    if (prefilledOccasion && OCCASIONS.includes(prefilledOccasion as typeof OCCASIONS[number])) {
+      updateFormData({ occasion: prefilledOccasion });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isComplete =
     !!formData.relationship &&
@@ -31,6 +40,11 @@ export default function StartPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isComplete) {
+      trackEvent('step_complete_start', {
+        relationship: formData.relationship,
+        occasion: formData.occasion,
+        budget_count: formData.budget.length,
+      });
       router.push('/gift/about');
     }
   };

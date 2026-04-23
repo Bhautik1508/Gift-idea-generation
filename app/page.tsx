@@ -2,7 +2,33 @@ import Link from 'next/link';
 import PeopleShortcut from '@/components/PeopleShortcut';
 
 export default function Home() {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'GiftSense',
+    url: 'https://giftsense.vercel.app',
+    description: 'AI-powered gift recommendations personalised to the recipient. Specific ideas, clear reasoning, and the confidence to choose.',
+    applicationCategory: 'LifestyleApplication',
+    operatingSystem: 'All',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'INR',
+    },
+    featureList: [
+      'Personalised gift recommendations',
+      'WhatsApp chat signal analysis',
+      'India-context aware suggestions',
+      'Confidence-scored gift ideas',
+    ],
+  };
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
     <div className="flex flex-col flex-1 items-center justify-center px-6 py-16 md:py-24">
       <main className="max-w-2xl w-full text-center">
         {/* Decorative element */}
@@ -134,5 +160,6 @@ export default function Home() {
         </section>
       </main>
     </div>
+    </>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { GiftRecommendation } from '@/lib/types';
+import { trackEvent } from '@/lib/analytics';
 
 interface ProductCardProps {
   product: GiftRecommendation;
@@ -52,6 +53,7 @@ export default function ProductCard({ product, onReject, isComparing, onCompareT
     if (!onReject) return;
     setIsRegenerating(true);
     setRejectError('');
+    trackEvent('card_reject', { product_name: product.product_name, reason });
     try {
       await onReject(product.product_name, reason);
       setShowRejectOptions(false);
@@ -72,6 +74,8 @@ export default function ProductCard({ product, onReject, isComparing, onCompareT
       `Why it fits: ${product.why_it_fits}`,
       `Search for: ${product.search_keywords}`
     ].join('\n');
+
+    trackEvent('card_share_click', { product_name: product.product_name });
 
     try {
       if (navigator.share) {
@@ -203,6 +207,7 @@ export default function ProductCard({ product, onReject, isComparing, onCompareT
               href={`https://www.google.com/search?q=${encodeURIComponent(product.search_keywords)}`}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackEvent('card_find_click', { product_name: product.product_name, category: product.category })}
               className="flex-1 h-10 rounded-lg bg-accent text-white text-sm font-medium flex items-center justify-center gap-1.5 hover:bg-accent-hover transition-colors"
             >
               Find this

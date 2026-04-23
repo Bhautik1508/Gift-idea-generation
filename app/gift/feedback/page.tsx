@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { trackEvent } from '@/lib/analytics';
 
 export default function FeedbackPage() {
   const router = useRouter();
@@ -10,24 +11,32 @@ export default function FeedbackPage() {
   const [note, setNote] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
+  const submitFeedback = async (landingValue: string, noteValue: string) => {
+    try {
+      await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ landing: landingValue, note: noteValue, timestamp: Date.now() }),
+      });
+    } catch {
+      // Feedback submission is best-effort — don't block the user
+    }
+    trackEvent('feedback_submitted', { landing: landingValue });
+    setSubmitted(true);
+  };
+
   const handleLanding = (choice: string) => {
     setLanding(choice);
     if (choice === 'Missed') {
       setStep(2);
     } else {
       // Positive outcome — submit immediately, no extra question needed
-      console.log({
-        landing: choice,
-        note: '',
-        timestamp: Date.now()
-      });
-      setSubmitted(true);
+      submitFeedback(choice, '');
     }
   };
 
   const handleSubmit = () => {
-    console.log({ landing, note, timestamp: Date.now() });
-    setSubmitted(true);
+    submitFeedback(landing, note);
   };
 
   if (submitted) {
