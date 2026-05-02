@@ -36,6 +36,15 @@ export interface ChatSignals {
 
 // ─── LLM Output ─────────────────────────────────────────────
 
+export interface GiftEnrichment {
+  merchant: 'amazon' | 'flipkart' | 'myntra' | 'nykaa' | 'other';
+  productUrl: string;
+  imageUrl: string | null;
+  priceInr: number | null;
+  rating: number | null;
+  asin: string | null;
+}
+
 export interface GiftRecommendation {
   product_name: string;
   category: 'Experience' | 'Product' | 'Consumable' | 'Wildcard';
@@ -49,6 +58,9 @@ export interface GiftRecommendation {
   social_note: string | null;
   // Phase 25: Post-processing signal attribution
   signal_source?: string | null;
+  // Phase 1: server-side product lookup (image, price, merchant, ASIN).
+  // Optional — when absent, render text-only as before.
+  enrichment?: GiftEnrichment | null;
 }
 
 export interface GiftTerritory {

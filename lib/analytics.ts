@@ -19,7 +19,8 @@ export type AnalyticsEvent =
   | 'refine_same_person'
   | 'start_over'
   | 'share_session'
-  | 'feedback_submitted';
+  | 'feedback_submitted'
+  | 'affiliate_click';
 
 // ─── Property types per event ───────────────────────────────
 
@@ -30,6 +31,14 @@ export interface AnalyticsEventProps {
   step_complete_upload: { chat_uploaded: boolean };
   results_viewed: { card_count: number; confidence_overall: string };
   card_find_click: { product_name: string; category: string };
+  affiliate_click: {
+    product_name: string;
+    merchant: string;
+    affiliate_program: 'amazon' | 'cuelinks' | 'none';
+    had_enrichment: boolean;
+    category: string;
+    confidence: string;
+  };
   card_share_click: { product_name: string };
   card_reject: { product_name: string; reason: string };
   copy_all_ideas: { card_count: number };

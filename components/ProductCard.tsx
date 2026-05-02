@@ -1,6 +1,21 @@
 import React, { useState } from 'react';
+import Image from 'next/image';
 import type { GiftRecommendation } from '@/lib/types';
 import { trackEvent } from '@/lib/analytics';
+import { buildAffiliateLink, buildKeywordSearchLink } from '@/lib/affiliate';
+import { trackAffiliateClick } from '@/lib/clickTracker';
+
+const MERCHANT_LABELS: Record<string, string> = {
+  amazon: 'Amazon',
+  flipkart: 'Flipkart',
+  myntra: 'Myntra',
+  nykaa: 'Nykaa',
+  other: 'Retailer',
+};
+
+function formatINR(value: number): string {
+  return `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+}
 
 interface ProductCardProps {
   product: GiftRecommendation;
@@ -108,8 +123,30 @@ export default function ProductCard({ product, onReject, isComparing, onCompareT
     );
   }
 
+  const enrichment = product.enrichment;
+
   return (
     <div className="flex flex-col h-full bg-surface border border-border rounded-2xl overflow-hidden hover:shadow-md transition-shadow duration-300 relative group">
+      {enrichment?.imageUrl && (
+        <div className="relative w-full aspect-[4/3] bg-gray-50 border-b border-border">
+          <Image
+            src={enrichment.imageUrl}
+            alt={product.product_name}
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className="object-contain p-4"
+            unoptimized
+          />
+          {enrichment.rating != null && (
+            <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/90 backdrop-blur text-xs font-medium text-foreground shadow-sm">
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" className="text-amber-400">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.366 2.446a1 1 0 00-.364 1.118l1.287 3.957c.3.922-.755 1.688-1.54 1.118l-3.366-2.446a1 1 0 00-1.176 0l-3.366 2.446c-.784.57-1.838-.196-1.539-1.118l1.286-3.957a1 1 0 00-.363-1.118L2.075 9.384c-.783-.57-.38-1.81.588-1.81h4.163a1 1 0 00.95-.69l1.285-3.957z" />
+              </svg>
+              {enrichment.rating.toFixed(1)}
+            </span>
+          )}
+        </div>
+      )}
       <div className="p-6 flex-grow flex flex-col">
         {/* 1. Top bar — fixed height */}
         <div className="flex justify-between items-start mb-4">
@@ -172,10 +209,25 @@ export default function ProductCard({ product, onReject, isComparing, onCompareT
           <p className="text-[13px] italic text-muted mb-3" style={{ fontFamily: 'var(--font-sans)' }}>
             {product.tagline}
           </p>
-          <div className="inline-block px-2.5 py-1 bg-accent/10 border border-accent/20 rounded-md">
-            <span className="font-bold text-accent text-sm tracking-wide">
-              {product.price_range}
-            </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-block px-2.5 py-1 bg-accent/10 border border-accent/20 rounded-md">
+              <span className="font-bold text-accent text-sm tracking-wide">
+                {product.price_range}
+              </span>
+            </div>
+            {enrichment?.priceInr != null && (
+              <span
+                className="inline-block px-2.5 py-1 bg-success/10 border border-success/20 rounded-md text-xs font-semibold text-success"
+                title={`Live price on ${MERCHANT_LABELS[enrichment.merchant] || 'retailer'}`}
+              >
+                {formatINR(enrichment.priceInr)} live
+              </span>
+            )}
+            {enrichment && (
+              <span className="inline-block px-2 py-0.5 rounded-full text-[10px] uppercase font-semibold tracking-wider bg-gray-100 text-gray-700 border border-gray-200">
+                {MERCHANT_LABELS[enrichment.merchant] || 'Retailer'}
+              </span>
+            )}
           </div>
         </div>
 
@@ -203,16 +255,48 @@ export default function ProductCard({ product, onReject, isComparing, onCompareT
       <div className="border-t border-border bg-gray-50/50 px-4 py-3 shrink-0">
         {!showRejectOptions ? (
           <div className="flex items-center gap-2">
-            <a
-              href={`https://www.google.com/search?q=${encodeURIComponent(product.search_keywords)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackEvent('card_find_click', { product_name: product.product_name, category: product.category })}
-              className="flex-1 h-10 rounded-lg bg-accent text-white text-sm font-medium flex items-center justify-center gap-1.5 hover:bg-accent-hover transition-colors"
-            >
-              Find this
-              <span aria-hidden="true">→</span>
-            </a>
+            {(() => {
+              const enrichment = product.enrichment;
+              const link = enrichment
+                ? buildAffiliateLink(enrichment.productUrl)
+                : buildKeywordSearchLink(product.search_keywords);
+              const merchantName = enrichment ? MERCHANT_LABELS[enrichment.merchant] || 'Retailer' : null;
+              const onClickFind = () => {
+                trackEvent('card_find_click', {
+                  product_name: product.product_name,
+                  category: product.category,
+                });
+                trackEvent('affiliate_click', {
+                  product_name: product.product_name,
+                  merchant: enrichment?.merchant ?? 'search',
+                  affiliate_program: link.program,
+                  had_enrichment: Boolean(enrichment),
+                  category: product.category,
+                  confidence: product.confidence,
+                });
+                trackAffiliateClick({
+                  product_name: product.product_name,
+                  merchant: enrichment?.merchant ?? null,
+                  affiliate_program: link.program,
+                  had_enrichment: Boolean(enrichment),
+                  category: product.category,
+                  confidence: product.confidence,
+                });
+              };
+              return (
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="sponsored noopener noreferrer"
+                  onClick={onClickFind}
+                  className="flex-1 h-10 rounded-lg bg-accent text-white text-sm font-medium flex items-center justify-center gap-1.5 hover:bg-accent-hover transition-colors"
+                  title="We may earn a commission if you buy via this link, at no extra cost to you."
+                >
+                  {enrichment && merchantName ? `View on ${merchantName}` : 'Find this'}
+                  <span aria-hidden="true">→</span>
+                </a>
+              );
+            })()}
             <button
               onClick={handleShare}
               className="w-10 h-10 flex-shrink-0 rounded-lg border border-border bg-surface text-foreground flex items-center justify-center hover:bg-black/5 transition-colors"

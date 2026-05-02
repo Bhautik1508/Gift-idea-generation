@@ -14,7 +14,7 @@ const CONFIDENCE_ORDER = { high: 0, medium: 1, low: 2 } as const;
 
 export default function ResultPage() {
   const router = useRouter();
-  const { result, resetAll, formData, replaceRecommendation } = useGift();
+  const { result, resetAll, formData, replaceRecommendation, mergeEnrichments } = useGift();
   const [showLowConfidence, setShowLowConfidence] = useState(false);
   const [copied, setCopied] = useState(false);
   const [compareItems, setCompareItems] = useState<GiftRecommendation[]>([]);
@@ -61,6 +61,32 @@ export default function ResultPage() {
       }
     }
   }, []);
+
+  // Background enrichment for cards beyond the top 3 (which the recommend
+  // route already enriched synchronously). Best-effort: ignore failures.
+  useEffect(() => {
+    if (!result?.recommendations || result.recommendations.length <= 3) return;
+    const remaining = result.recommendations
+      .slice(3)
+      .filter((r) => !('enrichment' in r) || r.enrichment === undefined);
+    if (remaining.length === 0) return;
+
+    let cancelled = false;
+    fetch('/api/enrich', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recommendations: remaining }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data?.recommendations) return;
+        mergeEnrichments(data.recommendations);
+      })
+      .catch(() => { /* best-effort */ });
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result?.recommendations?.length]);
 
   // Save session to sessionStorage for share links
   useEffect(() => {

@@ -33,6 +33,21 @@ const SECURITY_HEADERS = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  images: {
+    // Phase 1: enrichment fetches product imagery from these merchant CDNs.
+    // Add new patterns here as we onboard more merchants.
+    remotePatterns: [
+      { protocol: 'https', hostname: 'm.media-amazon.com' },
+      { protocol: 'https', hostname: 'images-na.ssl-images-amazon.com' },
+      { protocol: 'https', hostname: 'images-eu.ssl-images-amazon.com' },
+      { protocol: 'https', hostname: '**.media-amazon.com' },
+      { protocol: 'https', hostname: '**.ssl-images-amazon.com' },
+      { protocol: 'https', hostname: 'rukminim2.flixcart.com' },
+      { protocol: 'https', hostname: 'rukminim1.flixcart.com' },
+      { protocol: 'https', hostname: 'assets.myntassets.com' },
+      { protocol: 'https', hostname: 'images-static.nykaa.com' },
+    ],
+  },
   async headers() {
     return [
       {

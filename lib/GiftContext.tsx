@@ -35,6 +35,7 @@ interface GiftContextType {
   setIsLoading: (loading: boolean) => void;
   resetAll: () => void;
   replaceRecommendation: (index: number, newRec: GiftRecommendation) => void;
+  mergeEnrichments: (enriched: GiftRecommendation[]) => void;
 }
 
 const GiftContext = createContext<GiftContextType | undefined>(undefined);
@@ -118,6 +119,26 @@ export function GiftProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const mergeEnrichments = useCallback((enriched: GiftRecommendation[]) => {
+    setResult((prev) => {
+      if (!prev) return prev;
+      const byName = new Map(enriched.map((r) => [r.product_name, r]));
+      const next = {
+        ...prev,
+        recommendations: prev.recommendations.map((r) => {
+          const match = byName.get(r.product_name);
+          if (!match) return r;
+          // enrichment may explicitly be null (no result found) — preserve.
+          return 'enrichment' in match ? { ...r, enrichment: match.enrichment ?? null } : r;
+        }),
+      };
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('giftsense_result', JSON.stringify(next));
+      }
+      return next;
+    });
+  }, []);
+
   return (
     <GiftContext.Provider
       value={{
@@ -131,6 +152,7 @@ export function GiftProvider({ children }: { children: React.ReactNode }) {
         setIsLoading,
         resetAll,
         replaceRecommendation,
+        mergeEnrichments,
       }}
     >
       {children}

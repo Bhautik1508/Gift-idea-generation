@@ -1,14 +1,18 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { SYSTEM_PROMPT, buildUserPrompt } from '@/lib/prompts/giftRecommendation';
-import type { GiftFormData } from '@/lib/types';
+import type { GiftFormData, GiftRecommendation } from '@/lib/types';
 import { getClientKey, withTimeout } from '@/lib/apiUtils';
 import { rateLimit } from '@/lib/rateLimit';
+import { enrichRecommendations } from '@/lib/enrichment';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 
 const MAX_BODY_BYTES = 50_000; // 50 KB — generous for form data
 const GEMINI_TIMEOUT_MS = 25_000; // 25 seconds
+const TOP_N_TO_ENRICH = 3;
+const ENRICH_TIMEOUT_MS = 6_000;
 
 export async function POST(req: Request) {
   try {
@@ -114,6 +118,28 @@ export async function POST(req: Request) {
       text = retryResult.response.text();
       text = text.replace(/^```(json)?/, '').replace(/```$/, '').trim();
       parsed = JSON.parse(text);
+    }
+
+    // Phase 1.1a: enrich the top N recommendations synchronously so the
+    // result page has images & real prices on first render. Cards beyond
+    // top N are enriched in the background by the result page via /api/enrich.
+    if (parsed && Array.isArray(parsed.recommendations) && parsed.recommendations.length > 0) {
+      const all: GiftRecommendation[] = parsed.recommendations;
+      const toEnrich = all.slice(0, TOP_N_TO_ENRICH);
+      const rest = all.slice(TOP_N_TO_ENRICH);
+      try {
+        const enriched = await withTimeout(
+          enrichRecommendations(toEnrich),
+          ENRICH_TIMEOUT_MS,
+          'Enrichment'
+        );
+        parsed.recommendations = [...enriched, ...rest];
+      } catch (err) {
+        // Enrichment is best-effort — never block the response on its failure.
+        logger.warn('recommend.enrichment.timeout_or_error', {
+          err: err instanceof Error ? err.message : String(err),
+        });
+      }
     }
 
     return new NextResponse(JSON.stringify(parsed), {
