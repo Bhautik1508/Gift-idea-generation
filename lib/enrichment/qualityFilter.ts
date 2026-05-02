@@ -38,18 +38,22 @@ export function isPriceWithinTolerance(
 }
 
 /**
- * Apply quality gating to a candidate enrichment result. Returns null to
- * drop the enrichment (the card will render text-only as before).
+ * Apply quality gating to a candidate enrichment result.
+ *
+ * - Missing productUrl → drop the whole enrichment (nothing useful to render).
+ * - Price diverges >1.5x from the LLM range → null out priceInr only, keep
+ *   the image, merchant, rating, and URL. The image is the biggest
+ *   perceived-quality win; we just don't trust ourselves to quote a number.
  */
 export function applyQualityFilter(
   enrichment: GiftEnrichment,
   llmPriceRange: string
 ): GiftEnrichment | null {
-  if (!isPriceWithinTolerance(enrichment.priceInr, llmPriceRange)) {
-    return null;
-  }
   if (!enrichment.productUrl) {
     return null;
+  }
+  if (!isPriceWithinTolerance(enrichment.priceInr, llmPriceRange)) {
+    return { ...enrichment, priceInr: null };
   }
   return enrichment;
 }

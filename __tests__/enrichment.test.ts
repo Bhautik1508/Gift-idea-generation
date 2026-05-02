@@ -103,15 +103,17 @@ describe('enrichRecommendations', () => {
     expect(out[0].enrichment).toEqual(goodEnrichment);
   });
 
-  it('quality-filters out off-price enrichments', async () => {
+  it('quality-filter keeps image but nulls price when price is divergent', async () => {
     sqlMock.mockResolvedValueOnce([]);
     providerSearch.mockResolvedValueOnce({ ...goodEnrichment, priceInr: 99999 });
     sqlMock.mockResolvedValueOnce(undefined);
 
     const out = await enrichRecommendations([makeRec()]);
 
-    // Provider returned something but quality filter dropped it.
-    expect(out[0].enrichment).toBeNull();
+    expect(out[0].enrichment).not.toBeNull();
+    expect(out[0].enrichment!.priceInr).toBeNull();
+    expect(out[0].enrichment!.imageUrl).toBe(goodEnrichment.imageUrl);
+    expect(out[0].enrichment!.productUrl).toBe(goodEnrichment.productUrl);
   });
 
   it('returns null enrichment when provider throws', async () => {

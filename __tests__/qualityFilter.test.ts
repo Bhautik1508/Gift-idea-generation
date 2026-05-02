@@ -69,12 +69,19 @@ describe('applyQualityFilter', () => {
     expect(out).toEqual(baseEnrichment);
   });
 
-  it('drops enrichment when price is wildly off', () => {
+  it('keeps image/url/merchant/rating but nulls price when price is wildly off', () => {
     const expensive = { ...baseEnrichment, priceInr: 50000 };
-    expect(applyQualityFilter(expensive, '₹2,000–3,500')).toBeNull();
+    const out = applyQualityFilter(expensive, '₹2,000–3,500');
+    expect(out).not.toBeNull();
+    expect(out!.priceInr).toBeNull();
+    expect(out!.imageUrl).toBe(baseEnrichment.imageUrl);
+    expect(out!.productUrl).toBe(baseEnrichment.productUrl);
+    expect(out!.merchant).toBe(baseEnrichment.merchant);
+    expect(out!.rating).toBe(baseEnrichment.rating);
+    expect(out!.asin).toBe(baseEnrichment.asin);
   });
 
-  it('drops enrichment when productUrl is missing', () => {
+  it('drops enrichment entirely when productUrl is missing', () => {
     const broken = { ...baseEnrichment, productUrl: '' };
     expect(applyQualityFilter(broken, '₹2,000–3,500')).toBeNull();
   });
