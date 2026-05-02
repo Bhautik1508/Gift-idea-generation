@@ -40,5 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# local data (feedback storage)
+# local data (feedback storage — pre-Phase-0 fallback, no longer used)
 /data
+
+# claude-code local state
+/.claude

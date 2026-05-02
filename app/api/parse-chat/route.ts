@@ -5,7 +5,8 @@ import {
   parseWhatsAppChat,
   formatBothSides,
 } from '@/lib/chatParser';
-import { rateLimit, getClientKey, withTimeout } from '@/lib/apiUtils';
+import { getClientKey, withTimeout } from '@/lib/apiUtils';
+import { rateLimit } from '@/lib/rateLimit';
 
 export const runtime = 'nodejs';
 
@@ -16,7 +17,8 @@ export async function POST(req: Request) {
   try {
     // Rate limiting: 5 requests per minute per IP
     const clientKey = getClientKey(req);
-    if (!rateLimit(clientKey + ':chat', 5, 60_000)) {
+    const allowed = await rateLimit({ key: `chat:${clientKey}`, max: 5, windowMs: 60_000 });
+    if (!allowed) {
       return NextResponse.json(
         { error: 'Too many requests. Please wait a moment and try again.' },
         { status: 429 }

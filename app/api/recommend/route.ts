@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { SYSTEM_PROMPT, buildUserPrompt } from '@/lib/prompts/giftRecommendation';
 import type { GiftFormData } from '@/lib/types';
-import { rateLimit, getClientKey, withTimeout } from '@/lib/apiUtils';
+import { getClientKey, withTimeout } from '@/lib/apiUtils';
+import { rateLimit } from '@/lib/rateLimit';
 
 export const runtime = 'nodejs';
 
@@ -13,7 +14,8 @@ export async function POST(req: Request) {
   try {
     // Rate limiting: 5 requests per minute per IP
     const clientKey = getClientKey(req);
-    if (!rateLimit(clientKey, 5, 60_000)) {
+    const allowed = await rateLimit({ key: `recommend:${clientKey}`, max: 5, windowMs: 60_000 });
+    if (!allowed) {
       return NextResponse.json(
         { error: 'Too many requests. Please wait a moment and try again.' },
         { status: 429 }

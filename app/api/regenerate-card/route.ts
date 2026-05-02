@@ -1,19 +1,27 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { buildUserPrompt, SYSTEM_PROMPT } from '@/lib/prompts/giftRecommendation';
-import { rateLimit, getClientKey, withTimeout } from '@/lib/apiUtils';
+import { getClientKey, withTimeout } from '@/lib/apiUtils';
+import { rateLimit } from '@/lib/rateLimit';
 
 const GEMINI_TIMEOUT_MS = 15_000; // 15 seconds — single card should be fast
+const MAX_BODY_BYTES = 50_000;
 
 export async function POST(req: Request) {
   try {
     // Rate limiting: 10 requests per minute per IP (more generous for card rejects)
     const clientKey = getClientKey(req);
-    if (!rateLimit(clientKey + ':regen', 10, 60_000)) {
+    const allowed = await rateLimit({ key: `regen:${clientKey}`, max: 10, windowMs: 60_000 });
+    if (!allowed) {
       return NextResponse.json(
         { error: 'Too many requests. Please wait a moment and try again.' },
         { status: 429 }
       );
+    }
+
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > MAX_BODY_BYTES) {
+      return NextResponse.json({ error: 'Request too large.' }, { status: 413 });
     }
 
     const { formData, rejectedProduct, rejectionReason } = await req.json();

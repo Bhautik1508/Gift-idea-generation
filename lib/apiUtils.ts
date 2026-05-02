@@ -1,14 +1,11 @@
-// Simple in-memory rate limiter for API routes.
-// Resets on server restart — suitable for dev/demo, not production at scale.
+// Legacy synchronous in-memory rate limiter. Kept for backward compatibility
+// with older tests; new code should use `lib/rateLimit.ts` (Upstash-backed,
+// async, with in-memory fallback when Redis env vars are not set).
 
 const store = new Map<string, { count: number; resetAt: number }>();
 
 /**
- * Check if a request should be rate-limited.
- * @param key Unique identifier (e.g., IP address)
- * @param maxRequests Max requests allowed in the window
- * @param windowMs Time window in milliseconds
- * @returns true if the request is ALLOWED, false if rate-limited
+ * @deprecated Use `rateLimit` from `@/lib/rateLimit` instead.
  */
 export function rateLimit(
   key: string,
